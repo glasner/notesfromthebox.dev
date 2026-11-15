@@ -7,6 +7,13 @@
   "url": "https://notesfromthebox.dev/issues/001/",
   "articles": [
     {
+      "slug": "welcome-to-my-crib",
+      "title": "Welcome to My Crib",
+      "url": "https://notesfromthebox.dev/issues/001/welcome-to-my-crib/",
+      "markdown": "https://notesfromthebox.dev/issues/001/welcome-to-my-crib/index.md",
+      "json": "https://notesfromthebox.dev/issues/001/welcome-to-my-crib/article.json"
+    },
+    {
       "slug": "after-the-pause",
       "title": "After the Pause",
       "url": "https://notesfromthebox.dev/issues/001/after-the-pause/",
