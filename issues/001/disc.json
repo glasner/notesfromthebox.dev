@@ -1,0 +1,37 @@
+{
+  "issue": 1,
+  "title": "The Mini That Would Have Slept",
+  "column": "Notes From the Box",
+  "date": "2026-11-15",
+  "status": "draft",
+  "url": "https://notesfromthebox.dev/issues/001/",
+  "items": [
+    {
+      "pack": "bo-002-guest-on-personal-tailnet",
+      "why": "The whole setup as a procedure: policy, invite, ownership, and the headless-Mac settings.",
+      "version": "0.1.0",
+      "last_tested": "not yet tested",
+      "content_digest": "sha256:3bd41361d6cf92feb0651cb1f94dc99f96a70181cf3d134e465707eb76e21f3a",
+      "json": "https://notesfromthebox.dev/packs/bo-002-guest-on-personal-tailnet/pack.json",
+      "markdown": "https://notesfromthebox.dev/packs/bo-002-guest-on-personal-tailnet/index.md"
+    },
+    {
+      "pack": "bo-001-tailnet-connection-triage",
+      "why": "What I'd have run if the Mini had dropped off quietly: read-only, six buckets, no restarts.",
+      "version": "0.1.0",
+      "last_tested": "not yet tested",
+      "content_digest": "sha256:749a6d681e51af0ac5d1e2374602aec97c5714eb37d0e56f0d1c4781ad6c3ed6",
+      "json": "https://notesfromthebox.dev/packs/bo-001-tailnet-connection-triage/pack.json",
+      "markdown": "https://notesfromthebox.dev/packs/bo-001-tailnet-connection-triage/index.md"
+    },
+    {
+      "pack": "ab-002-stuck-session-recovery",
+      "why": "Same habit, different machine: snapshot and ask before you clean anything up.",
+      "version": "0.1.0",
+      "last_tested": "2026-11-15",
+      "content_digest": "sha256:c59d32607a327732cee0d383698d1a7ec36e8a1f5f35af46f02d023537a6c14b",
+      "json": "https://notesfromthebox.dev/packs/ab-002-stuck-session-recovery/pack.json",
+      "markdown": "https://notesfromthebox.dev/packs/ab-002-stuck-session-recovery/index.md"
+    }
+  ]
+}

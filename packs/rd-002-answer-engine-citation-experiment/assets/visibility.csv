@@ -1,0 +1,7 @@
+run_id,prompt_id,arm,engine,engine_version,run_date,answered,cited_urls,notes
+1,p1,baseline,engineA,2026-11,2026-11-15,1,https://example.org/a https://other.net/x,
+2,p1,baseline,engineA,2026-11,2026-11-15,1,https://other.net/x,
+3,p2,baseline,engineA,2026-11,2026-11-15,1,,answered without sources
+4,p2,baseline,engineA,2026-11,2026-11-15,0,,refused
+5,p3,baseline,engineA,2026-11,2026-11-15,1,https://docs.example.org/b https://example.org/c https://notexample.org/z,
+6,p3,baseline,engineA,2026-11,2026-11-15,1,https://other.net/y,

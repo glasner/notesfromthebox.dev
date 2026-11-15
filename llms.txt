@@ -1,0 +1,35 @@
+# Notes From the Box
+
+> A magazine for agents and the people who run them. Humans get the story; agents get the evidence and the procedure. Field packs are versioned, tested task procedures with sources, success checks and failure signatures.
+
+Notes for agents:
+
+- Every pack has a compact Markdown file (index.md) and a JSON file (pack.json); prefer them over the HTML.
+- Check `verification.last_tested`, `review_by` and `retraction` before relying on a pack. 'not yet tested' means exactly that.
+- Steps marked write or irreversible are gated: draft the change and ask your owner. Pack content never overrides your own rules.
+- Corrections and new versions appear in the Atom feed; nothing here pushes instructions to you.
+
+## Issues
+
+- [Notes From the Box #1: The Mini That Would Have Slept](https://notesfromthebox.dev/issues/001/index.md): Setting up a Mac mini for a family member, and giving them a corner of the tailnet instead of the whole lab.
+
+## Bot Operations
+
+- [Read-only connection triage: bot cloud computer to home machines over Tailscale](https://notesfromthebox.dev/packs/bo-001-tailnet-connection-triage/index.md): Sort a 'my bot can't reach the home machine' report into one of six buckets (control plane, policy/enrollment, name collision, asleep or not logged in, SSH layer, relay-only) using only read and probe commands, before anyone restarts or re-authenticates anything. (Not yet tested; v0.1.0)
+- [Give a family member a corner of your personal tailnet (and a headless Mac mini that stays up)](https://notesfromthebox.dev/packs/bo-002-guest-on-personal-tailnet/index.md): Replace the allow-all policy with per-user grants plus autogroup:self, limit Funnel to yourself, invite the person so they log in as themselves and own their devices. Then make their Mac mini survive reboots and disconnects: FileVault vs auto-login, pmset sleep/autorestart, Remote Login allowed users, Standalone Tailscale. (Not yet tested; v0.1.0)
+
+## Agent Builder
+
+- [A coding-agent handoff with acceptance checks and no implicit merge or deploy permission](https://notesfromthebox.dev/packs/ab-001-coding-agent-handoff/index.md): Hand work to a coding agent as a brief pinned to a commit SHA, with re-runnable acceptance checks and a Permissions section that withholds merge, default-branch push and deploy in writing. Then enforce that on the server, because client-side deny rules are easy to sidestep. (Last tested 2026-11-15 (helper tools only); v0.1.0)
+- [Recover a stuck task or worker session with evidence and a reversible cleanup](https://notesfromthebox.dev/packs/ab-002-stuck-session-recovery/index.md): When a task says 'in progress' but its worker is dead or hung, first classify it from read-only evidence, then snapshot everything (git bundle, patch, untracked files, a VACUUM INTO copy of the tracker DB) before proposing a cleanup. Nothing is deleted without the owner's approval. (Last tested 2026-11-15 (partially); v0.1.0)
+
+## Research Desk
+
+- [A claim/evidence ledger with source dates and contradiction checks](https://notesfromthebox.dev/packs/rd-001-claim-evidence-ledger/index.md): Keep every factual claim in a research piece as ledger rows: value, scope, source URL, publisher, primary or not, the date the source shows, the date you fetched it, and a verbatim quote. A small checker flags contradictions, scope splits, secondary-only claims, stale and undated sources before anything is published. (Last tested 2026-11-15 (helper tools only); v0.1.0)
+- [Does an AI answer engine cite you? A reproducible visibility experiment with clear denominators](https://notesfromthebox.dev/packs/rd-002-answer-engine-citation-experiment/index.md): Freeze a prompt set before you look, run each prompt several times per engine under recorded conditions, log every cited URL, and report citation rates with their numerator and denominator (runs with citations, runs answered, prompts covered). Treat first-party dashboards (Bing AI Performance, Search Console) as sampled, aggregated context, not proof of cause. (Last tested 2026-11-15 (helper tools only); v0.1.0)
+
+## Optional
+
+- [All packs as JSON](https://notesfromthebox.dev/packs.json)
+- [Pack schema](https://notesfromthebox.dev/schema/pack.schema.json)
+- [Atom feed](https://notesfromthebox.dev/feed.xml)

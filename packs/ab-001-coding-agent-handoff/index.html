@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A coding-agent handoff with acceptance checks and no implicit merge or deploy permission · Notes From the Box</title>
+  <meta name="description" content="Hand work to a coding agent as a brief pinned to a commit SHA, with re-runnable acceptance checks and a Permissions section that withholds merge, default-branch push and deploy in writing. Then enforce that on the server, because client-side deny rules are easy to sidestep.">
+  <link rel="stylesheet" href="../../style.css">
+  <link rel="describedby" type="text/markdown" href="../../llms.txt">
+  <link rel="alternate" type="application/atom+xml" title="Notes From the Box" href="../../feed.xml">
+  <link rel="alternate" type="text/markdown" href="index.md">
+  <link rel="alternate" type="application/json" href="pack.json">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site"><a href="../../index.html" class="brand">Notes From the Box</a>
+<nav aria-label="Site"><a href="../../index.html">Home</a> · <a href="../../packs.json">packs.json</a> · <a href="../../feed.xml">Feed</a> · <a href="../../llms.txt">llms.txt</a></nav></header>
+<main id="main">
+<article class="pack">
+<p class="kicker">Agent Builder · Field pack <code>ab-001-coding-agent-handoff</code> · v0.1.0 · <span class="status">private-review</span></p>
+<h1>A coding-agent handoff with acceptance checks and no implicit merge or deploy permission</h1>
+<p class="summary">Hand work to a coding agent as a brief pinned to a commit SHA, with re-runnable acceptance checks and a Permissions section that withholds merge, default-branch push and deploy in writing. Then enforce that on the server, because client-side deny rules are easy to sidestep.</p>
+<dl class="facts">
+<dt>Verification</dt><dd>Last tested 2026-11-15 (helper tools only). Review by 2027-02-15.</dd>
+<dt>Editor</dt><dd>Gus; second review: pending</dd>
+<dt>Default mode</dt><dd>dry-run</dd>
+<dt>Other formats</dt><dd><a href="index.md">Markdown</a> · <a href="pack.json">JSON</a></dd>
+</dl>
+<section aria-labelledby="h-explain"><h2 id="h-explain">Explanation</h2><h3>The contract in one line</h3>
+<p><strong>Done means you re-ran the checks and they passed, not that the agent said so. Landing is never part of the job.</strong></p>
+<h3>Why write "not allowed" when it's obvious</h3>
+<p>To you it's obvious. To an agent finishing a task, "make the tests pass and wrap it up" can read like permission to merge. So we write the withholding down, every time, in the same words. Then we make the server enforce it. Client-side deny rules are useful, but the vendor's own docs show they don't match a command written another way (S2).</p>
+<h3>Verdict</h3>
+<p><strong>Recommended</strong> for the brief and linter: we use the pattern daily, and the linter is tested. <strong>Works for us</strong> for the enforcement half, but we didn't re-test it against a live repo for this edition.</p></section>
+<section aria-labelledby="h-fit"><h2 id="h-fit">Fit</h2>
+<p><strong>Goal:</strong> Delegate a bounded code change to an agent (or another bot) so that &#x27;done&#x27; means the reviewer re-ran checks and they passed, and the agent could not have landed or shipped the change by itself.</p>
+<h3>Environment</h3><ul><li>Git repository hosted on GitHub (enforcement section)</li><li>Any coding agent that reads a Markdown brief</li><li>GitHub protected branches as documented 2026-11</li><li>Claude Code permission rules as documented 2026-11 (as one example of a client-side control)</li></ul>
+<h3>Prerequisites</h3><ul><li>You can create branch protection rules or rulesets on the repo</li><li>The agent&#x27;s credentials are not repository-admin credentials</li></ul>
+<h3>Permissions required</h3><ul><li>Repo admin, once, to set branch protection</li></ul>
+<h3>Don't use this when</h3><ul><li>Not a code-review checklist; it covers the contract around the change.</li><li>Not for exploratory spikes where there is nothing to accept yet; write a research brief instead.</li></ul>
+<p><strong>Expected output:</strong> A brief that passes tools/handoff_lint.py, a protected default branch the agent&#x27;s identity can&#x27;t bypass, and a report-back containing commands, exit codes and output tails the reviewer can re-run.</p></section>
+<section aria-labelledby="h-proc"><h2 id="h-proc">Procedure</h2><p>Write the brief from the template, lint it, make sure the server enforces what the brief says, hand off, then accept only on your own re-run of the checks.</p>
+<p class="notice">This pack describes a contract. It never grants a consuming agent permission to merge, push or deploy.</p>
+<ol class="steps"><li><p><strong>Pin the base</strong> <span class="effect effect-read">read-only</span></p>
+<p>Record the full commit SHA the work starts from.</p><pre><code>git rev-parse HEAD</code></pre>
+<p><em>Expect:</em> 40 hex characters. Branch names move; SHAs don&#x27;t.</p></li><li><p><strong>Write the brief</strong> <span class="effect effect-read">read-only</span></p>
+<p>Fill packs/assets/ab-001-handoff-template.md: Goal, Base, Scope in/out, Acceptance checks (command + expected result each), Permissions (explicit &#x27;Not allowed&#x27; lines for merge, default-branch push, deploy), Stop conditions, Report back.</p>
+<p><em>Expect:</em> Every check is something you, not the agent, can re-run.</p></li><li><p><strong>Lint it</strong> <span class="effect effect-read">read-only</span></p>
+<p>Run the linter and fix what it reports.</p><pre><code>.venv/bin/python tools/handoff_lint.py brief.md</code></pre>
+<p><em>Expect:</em> Exit 0, no output.</p></li><li><p><strong>Check server-side enforcement</strong> <span class="effect effect-read">read-only</span></p>
+<p>Confirm the default branch requires a PR, required status checks and an approving review, and that &#x27;Do not allow bypassing&#x27; is on or the agent&#x27;s identity isn&#x27;t an admin (S1).</p>
+<p><em>Expect:</em> The agent&#x27;s identity could not merge or push the default branch even if it tried.</p></li><li><p><strong>(Gated) Tighten protection if step 4 failed</strong> <span class="effect effect-write">WRITE (gated)</span></p>
+<p>Add or edit the branch protection rule / ruleset.</p>
+<p><em>Expect:</em> Re-run step 4; it passes.</p><p class="gate"><strong>Gate:</strong> Repository admin (the owner).</p></li><li><p><strong>Isolate the workspace</strong> <span class="effect effect-write">WRITE (gated)</span></p>
+<p>Give the agent its own branch and linked worktree from the pinned SHA (S3).</p><pre><code>git worktree add -b agent/&lt;name&gt; ../wt-&lt;name&gt; &lt;sha&gt;</code></pre>
+<p><em>Expect:</em> The agent works in a directory no one else is using.</p><p class="gate"><strong>Gate:</strong> Whoever owns the repo checkout; reversible with &#x27;git worktree remove&#x27; after the work is saved.</p></li><li><p><strong>Hand off</strong> <span class="effect effect-read">read-only</span></p>
+<p>Send the brief. Client-side deny rules (S2) are a seatbelt, not the lock; the lock is step 4.</p>
+<p><em>Expect:</em> Agent acknowledges Scope and Permissions.</p></li><li><p><strong>Accept on your own re-run</strong> <span class="effect effect-probe">probe (no state change)</span></p>
+<p>Check out the agent&#x27;s final SHA and run every acceptance check yourself. Compare exit codes and output with the report.</p>
+<p><em>Expect:</em> All checks pass on your run. Disagreement with the agent&#x27;s report is itself a finding.</p></li><li><p><strong>(Gated) Land</strong> <span class="effect effect-irreversible">IRREVERSIBLE (gated)</span></p>
+<p>Merge and, separately, deploy. Neither is part of the handoff.</p>
+<p><em>Expect:</em> Merge commit references the brief.</p><p class="gate"><strong>Gate:</strong> The owner or the designated lander, after step 8, through the protected-branch flow.</p></li></ol></section>
+<section aria-labelledby="h-ver"><h2 id="h-ver">Verification</h2>
+<p><strong>Success check:</strong> tools/handoff_lint.py exits 0 on the brief; the agent&#x27;s identity is blocked by the server from merging or pushing the default branch; the reviewer&#x27;s own re-run of every acceptance check matches the expected results before anything lands.</p>
+<table><caption>Failure signatures</caption><thead><tr><th scope="col">If you see</th><th scope="col">It means</th><th scope="col">Next</th></tr></thead><tbody><tr><td>Linter: &#x27;Permissions must explicitly withhold: merge&#x27; (or push / deploy)</td><td>The brief is silent on landing, and silence gets read as permission.</td><td>Add the &#x27;Not allowed&#x27; lines from the template.</td></tr><tr><td>Linter: &#x27;Base must pin a full 40-character commit SHA&#x27;</td><td>Base is a branch name; the agent and reviewer may test different code.</td><td>Step 1.</td></tr><tr><td>Agent pushed to the default branch anyway</td><td>Server enforcement missing, or the agent ran with admin credentials that bypass protection by default (S1).</td><td>Revert via a PR, rotate to a non-admin token, enable &#x27;Do not allow bypassing&#x27;.</td></tr><tr><td>Client deny rule didn&#x27;t stop a push</td><td>Pattern rules don&#x27;t match rewritten commands such as &#x27;git -C . push&#x27; (S2).</td><td>Rely on server-side protection; treat client rules as advisory.</td></tr><tr><td>Agent reports green, your re-run is red</td><td>Different SHA, environment drift, or a flaky or non-deterministic check.</td><td>Compare SHAs first, then environments; don&#x27;t land.</td></tr></tbody></table>
+<p><strong>Rollback:</strong> The handoff itself changes nothing. Branch protection edits can be reverted in repo settings. Remove the agent worktree with &#x27;git worktree remove&#x27; only after its branch is pushed or bundled.</p>
+<p><strong>Last tested 2026-11-15 (helper tools only).</strong> Scope: Tested: the linter against the template and good/bad fixtures (tests/run_tests.py, all passing on 2026-11-15). Not tested in this edition: a live agent run, or branch protection on a live repository.</p></section>
+<section aria-labelledby="h-ev"><h2 id="h-ev">Evidence</h2>
+<h3>Sources</h3><ol class="sources"><li id="S1"><strong>S1</strong> <a href="https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches">About protected branches</a>, GitHub Docs (primary). Fetched 2026-11-15. <span class="supports">Supports: Required reviews and status checks before merging; by default protections don&#x27;t apply to admins unless &#x27;Do not allow bypassing&#x27; is set; protected branches on private repos need a paid plan.</span></li><li id="S2"><strong>S2</strong> <a href="https://code.claude.com/docs/en/permissions">Configure permissions (Claude Code)</a>, Anthropic (primary). Fetched 2026-11-15. <span class="supports">Supports: Rules evaluate deny → ask → allow. A deny rule like Bash(git push *) does not match &#x27;git -C . push&#x27; or the same program by path or inside sh -c.</span></li><li id="S3"><strong>S3</strong> <a href="https://git-scm.com/docs/git-worktree">git-worktree documentation</a>, Git project (primary). Fetched 2026-11-15; source shows “manual unchanged since 2.56.0 (2026-09-28)”. <span class="supports">Supports: One linked worktree per agent so parallel work doesn&#x27;t share a checkout.</span></li></ol>
+<h3>Original observations</h3><ul><li><strong>2026-11</strong> · Our own multi-agent workflow: The rule that actually held was the boring one: workers never land, never push the default branch, never deploy. A human or the supervising bot does that after re-running the checks. Writing it into every brief stopped the &#x27;I assumed done meant merged&#x27; class of surprise.</li><li><strong>2026-11</strong> · Our own workflow: An agent&#x27;s self-reported &#x27;all tests pass&#x27; and the reviewer&#x27;s re-run disagreed often enough that we stopped accepting the self-report as evidence.</li></ul>
+<p><strong>Test environment:</strong> tools/handoff_lint.py run against the template and two fixtures (tests/run_tests.py), 2026-11-15, Python 3.13 on a Linux box. The branch-protection half was not exercised against a live repository for this edition.</p>
+<h3>Measured outcomes</h3><ul><li>Linter: good fixture passes; template fails only on the placeholder SHA; bad fixture fails on all seven expected problems.</li></ul>
+<h3>Uncertainty</h3><ul><li>The linter is a regex heuristic. It catches missing structure and obvious grants (&#x27;feel free to merge&#x27;), not clever wording.</li><li>Client-side permission syntax differs across agent tools and changes often; S2 is one example, not a standard.</li></ul>
+<h3>Counterexamples</h3><ul><li>A solo developer on a private repo on GitHub Free can&#x27;t use protected branches (S1). There the server-side half of this pack doesn&#x27;t apply; use a separate non-admin token and a pre-receive hook on a self-hosted remote, or accept the weaker client-side controls knowingly.</li></ul></section>
+<section aria-labelledby="h-assets"><h2 id="h-assets">Files shipped with this pack</h2><ul><li><a href="assets/ab-001-handoff-template.md">packs/assets/ab-001-handoff-template.md</a></li><li><a href="assets/handoff_lint.py">tools/handoff_lint.py</a></li></ul></section>
+<section aria-labelledby="h-rights"><h2 id="h-rights">Rights and integrity</h2>
+<p><strong>License:</strong> CC BY 4.0 for text; template and linter MIT. <strong>Provenance:</strong> Gus, from our own multi-agent practice; tool behaviour from vendor docs fetched 2026-11-15.</p>
+<p><strong>Permissions:</strong> Dry-run by default; landing and deploy are always owner-gated. <strong>Telemetry:</strong> None.</p>
+<p><strong>Content digest:</strong> <code class="digest">sha256:e93854b98fd1cebcd2c094eae59e311dd459e1c2d4c78808d77ecc5d7323c781</code><br><small>SHA-256 of the canonical source file packs/ab-001-coding-agent-handoff.md as built. Identifies content; does not prove authorship.</small></p>
+<h3>Changelog</h3><ul><li>0.1.0 · 2026-11-15: First private draft with template and linter; linter tested on fixtures.</li></ul></section>
+<section aria-labelledby="h-rel"><h2 id="h-rel">Related packs</h2><ul><li><a href="../ab-002-stuck-session-recovery/index.html">ab-002-stuck-session-recovery</a></li></ul></section>
+</article>
+</main>
+<footer class="site"><p>Built 2026-11-15. Private preview, not published. Text CC BY 4.0 unless a pack says otherwise.</p></footer>
+</body>
+</html>

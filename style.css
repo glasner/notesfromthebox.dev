@@ -1,0 +1,18 @@
+:root{--fg:#1b1b1b;--bg:#fdfdfb;--mut:#555;--acc:#0b5cad;--line:#ddd;--warn:#8a1c00;--chip:#eef2f6}
+@media (prefers-color-scheme:dark){:root{--fg:#ececec;--bg:#141414;--mut:#b0b0b0;--acc:#7ab8ff;--line:#333;--warn:#ff9b7a;--chip:#22282e}}
+*{box-sizing:border-box}body{margin:0 auto;max-width:46rem;padding:1rem 1.25rem 3rem;font:1.05rem/1.6 Georgia,'Iowan Old Style',serif;color:var(--fg);background:var(--bg)}
+a{color:var(--acc)}a:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.skip{position:absolute;left:-999px}.skip:focus{left:1rem;top:1rem;background:var(--bg);padding:.5rem;z-index:9}
+header.site,footer.site{font:0.9rem/1.4 system-ui,sans-serif;color:var(--mut);border-bottom:1px solid var(--line);padding-bottom:.6rem;margin-bottom:1.5rem}
+footer.site{border-top:1px solid var(--line);border-bottom:0;margin-top:3rem;padding-top:.6rem}
+.brand{font-weight:700;color:var(--fg);text-decoration:none}.note{font-style:italic}
+h1,h2,h3{font-family:system-ui,sans-serif;line-height:1.25}h1{font-size:1.9rem}
+.kicker,.byline,dl.facts,.effect,table,small{font-family:system-ui,sans-serif}.kicker{color:var(--mut);font-size:.85rem;text-transform:uppercase;letter-spacing:.04em}
+.summary{font-size:1.15rem}.status{font-weight:600}
+dl.facts{display:grid;grid-template-columns:max-content 1fr;gap:.2rem 1rem;font-size:.92rem;border:1px solid var(--line);padding:.75rem;border-radius:6px}dl.facts dt{font-weight:600}dl.facts dd{margin:0}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin:1rem 0}th,td{border:1px solid var(--line);padding:.4rem .5rem;text-align:left;vertical-align:top}caption{text-align:left;font-weight:600;padding:.3rem 0}
+pre{overflow-x:auto;background:var(--chip);padding:.6rem;border-radius:4px;font-size:.85rem}code{font-size:.9em}
+.effect{font-size:.75rem;padding:.05rem .4rem;border-radius:3px;background:var(--chip);white-space:nowrap}.effect-write,.effect-irreversible,.effect-untested{color:var(--warn);font-weight:700}
+.gate{border-left:4px solid var(--warn);padding-left:.6rem}.notice{font-style:italic;color:var(--mut)}
+ol.steps>li{margin-bottom:1rem}.sources li{margin-bottom:.4rem}.supports{color:var(--mut)}.digest{word-break:break-all}
+aside,.disc{border:1px solid var(--line);border-radius:6px;padding:.25rem 1rem;margin:2rem 0}

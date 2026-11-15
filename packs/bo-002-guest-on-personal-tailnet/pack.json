@@ -1,0 +1,382 @@
+{
+  "schema_version": 1,
+  "identity": {
+    "id": "bo-002-guest-on-personal-tailnet",
+    "title": "Give a family member a corner of your personal tailnet (and a headless Mac mini that stays up)",
+    "summary": "Replace the allow-all policy with per-user grants plus autogroup:self, limit Funnel to yourself, invite the person so they log in as themselves and own their devices. Then make their Mac mini survive reboots and disconnects: FileVault vs auto-login, pmset sleep/autorestart, Remote Login allowed users, Standalone Tailscale.",
+    "desk": "bot-operations",
+    "editor": "Gus",
+    "second_reviewer": null,
+    "version": "0.1.0",
+    "status": "private-review",
+    "published": null,
+    "updated": "2026-11-15",
+    "changelog": [
+      {
+        "version": "0.1.0",
+        "date": "2026-11-15",
+        "note": "First private draft, written from a setup we did this month. Policy saved in production; isolation not yet verified end to end."
+      }
+    ],
+    "canonical_url": "https://notesfromthebox.dev/packs/bo-002-guest-on-personal-tailnet/"
+  },
+  "fit": {
+    "goal": "Let one more person (a family member, a guest, a contractor) use your tailnet for their own laptop and their own always-on Mac without being able to reach anything else of yours.",
+    "audience": [
+      "Owners of a personal tailnet who run bots or home servers on it"
+    ],
+    "environment": [
+      "Tailscale personal tailnet, policy managed in the admin console",
+      "Apple-silicon Mac mini on a current macOS release (26 or later), intended to run headless"
+    ],
+    "versions": [
+      "Tailscale grants syntax as documented 'Last validated Apr 8, 2026'",
+      "macOS 26 or later (FileVault-over-SSH unlock needs 26+)"
+    ],
+    "prerequisites": [
+      "You are the tailnet Owner or an Admin",
+      "The family member has their own identity-provider login (e.g. their own email account)",
+      "Physical or screen-sharing access to the Mac with an admin password for the one-time macOS steps"
+    ],
+    "permissions_required": [
+      "Edit the tailnet policy file",
+      "Invite users",
+      "macOS admin (sudo) on the Mini, once"
+    ],
+    "exclusions": [
+      "Organisation tailnets with groups synced from an identity provider: use groups, not this pattern.",
+      "Tagged devices: autogroup:self does not apply to tagged devices, so a tagged Mini would not be 'theirs'.",
+      "Laptops: turning FileVault off is a poor trade on anything portable."
+    ],
+    "expected_output": "A saved policy whose tests prove the isolation, an accepted invite, the Mini logged into Tailscale as the family member, and a Mini that comes back on its own after a reboot or power cut."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "S1",
+        "title": "Syntax reference for the tailnet policy file",
+        "url": "https://tailscale.com/kb/1337/policy-syntax",
+        "publisher": "Tailscale",
+        "kind": "primary",
+        "fetched": "2026-11-15",
+        "source_dated": "Last validated Apr 8, 2026",
+        "supports": "autogroup:self selects a user's own devices, doesn't apply to tags; nodeAttrs funnel; tests block rejects a policy save if an assertion fails; tests can't use wildcards."
+      },
+      {
+        "id": "S2",
+        "title": "Grants",
+        "url": "https://tailscale.com/kb/1324/grants",
+        "publisher": "Tailscale",
+        "kind": "primary",
+        "fetched": "2026-11-15",
+        "source_dated": "Last validated Jul 24, 2026",
+        "supports": "Deny-by-default; grants preferred over legacy ACLs; src/dst/ip structure."
+      },
+      {
+        "id": "S3",
+        "title": "Tailscale Funnel",
+        "url": "https://tailscale.com/kb/1223/funnel",
+        "publisher": "Tailscale",
+        "kind": "primary",
+        "fetched": "2026-11-15",
+        "source_dated": "Last validated Jan 20, 2026",
+        "supports": "Enabling Funnel from the CLI adds a nodeAttrs entry that lets every autogroup:member use it by default; admins can restrict it."
+      },
+      {
+        "id": "S4",
+        "title": "Invite any user to your tailnet",
+        "url": "https://tailscale.com/kb/1271/invite-any-user",
+        "publisher": "Tailscale",
+        "kind": "primary",
+        "fetched": "2026-11-15",
+        "source_dated": "Last validated Jan 5, 2026",
+        "supports": "Invite by email with a chosen role; one account per person; unused invites expire after 30 days; invited users are billed if active; user approval may apply."
+      },
+      {
+        "id": "S5",
+        "title": "Three ways to run Tailscale on macOS",
+        "url": "https://tailscale.com/kb/1065/macos-variants",
+        "publisher": "Tailscale",
+        "kind": "primary",
+        "fetched": "2026-11-15",
+        "source_dated": "Last validated Jan 5, 2026",
+        "supports": "Standalone variant recommended; neither Standalone nor App Store runs before login; never install both variants."
+      },
+      {
+        "id": "S6",
+        "title": "How to log in automatically to a Mac user account",
+        "url": "https://support.apple.com/en-us/102316",
+        "publisher": "Apple",
+        "kind": "primary",
+        "fetched": "2026-11-15",
+        "source_dated": "Published Date: May 19, 2026",
+        "supports": "Automatic login is unavailable while FileVault is on."
+      },
+      {
+        "id": "S7",
+        "title": "If you don't see a login window when you start your Mac",
+        "url": "https://support.apple.com/guide/mac-help/a-login-window-start-mac-mchlp1158/mac",
+        "publisher": "Apple",
+        "kind": "primary",
+        "fetched": "2026-11-15",
+        "supports": "Don't let automatic login sign in an administrator; auto-login lets anyone with physical access in."
+      },
+      {
+        "id": "S8",
+        "title": "Managing FileVault in macOS (Unlock FileVault using SSH)",
+        "url": "https://support.apple.com/guide/security/managing-filevault-sec8447f5049/web",
+        "publisher": "Apple Platform Security",
+        "kind": "primary",
+        "fetched": "2026-11-15",
+        "source_dated": "Published Date: January 28, 2026",
+        "supports": "On Apple silicon with macOS 26+, FileVault can be unlocked over SSH after a restart if Remote Login is on and a network connection is available."
+      },
+      {
+        "id": "S9",
+        "title": "Allow a remote computer to access your Mac",
+        "url": "https://support.apple.com/guide/mac-help/allow-a-remote-computer-to-access-your-mac-mchlp1066/mac",
+        "publisher": "Apple",
+        "kind": "primary",
+        "fetched": "2026-11-15",
+        "supports": "Remote Login 'Allow access for: Only these users' list."
+      },
+      {
+        "id": "S10",
+        "title": "pmset(1) reference",
+        "url": "https://ss64.com/mac/pmset.html",
+        "publisher": "SS64 (mirror of the pmset man page)",
+        "kind": "secondary",
+        "fetched": "2026-11-15",
+        "supports": "sleep / disksleep / autorestart semantics; 'pmset -g' to read current settings. Cross-check with 'man pmset' on the machine itself."
+      },
+      {
+        "id": "S11",
+        "title": "ACL policy examples: Allow all (default ACL)",
+        "url": "https://tailscale.com/kb/1192/acl-samples",
+        "publisher": "Tailscale",
+        "kind": "primary",
+        "fetched": "2026-11-15",
+        "source_dated": "Last validated Feb 2, 2026",
+        "supports": "New tailnets start with an allow-all policy; policy changes can be reverted from the Configuration logs page."
+      }
+    ],
+    "observations": [
+      {
+        "date": "2026-11",
+        "setting": "Personal tailnet, new Apple-silicon Mac mini for a family member",
+        "observed": "The tailnet still had the default allow-all policy. Inviting anyone into it would have given them every device."
+      },
+      {
+        "date": "2026-11",
+        "setting": "Same Mini",
+        "observed": "System sleep was 1 minute. The Mini answered fine while someone was screen-sharing and would have gone to sleep about a minute after they disconnected."
+      },
+      {
+        "date": "2026-11",
+        "setting": "Same Mini",
+        "observed": "FileVault was on, so automatic login was greyed out. The owner turned FileVault off so the family member's standard account could log in automatically. That trade is deliberate; see Uncertainty."
+      },
+      {
+        "date": "2026-11",
+        "setting": "Same Mini",
+        "observed": "Remote Login and Screen Sharing allowed only the owner's admin account. The family member's account had to be added to each list separately."
+      },
+      {
+        "date": "2026-11",
+        "setting": "Same Mini",
+        "observed": "Automatic installation of macOS updates was on, and a newer macOS release was being offered. A headless machine that upgrades and reboots by itself is a surprise reboot you didn't schedule. We recommended turning automatic macOS installs off and updating on purpose."
+      },
+      {
+        "date": "2026-11",
+        "setting": "Same tailnet",
+        "observed": "The new policy saved and the invite was accepted. When we checked, none of the family member's devices had joined yet, so the isolation is configured but not yet observed working."
+      }
+    ],
+    "test_environment": "One personal tailnet and one Apple-silicon Mac mini on a current macOS release, November 2026. Policy edits made in the admin console by the owner.",
+    "measured_outcomes": [],
+    "uncertainty": [
+      "Turning FileVault off removes the extra at-rest protection. Apple silicon still encrypts the disk, but without FileVault it unlocks with no password (Apple's FileVault overview). For a Mini that never leaves the house this was our owner's call. For anything portable, don't.",
+      "macOS 26 can unlock FileVault over SSH after a restart (S8). We have not tested it. The Standalone Tailscale client doesn't run before login (S5), so we expect that unlock to work only from the local network, not over the tailnet. That's inferred, not tested.",
+      "Community reports say pre-boot SSH unlock broke or was flaky on some 26.x point releases and on Wi-Fi. Treat it as a bonus, not a plan.",
+      "The 'lock the screen right after auto-login' preference some admins set is not in Apple's public docs; we don't cite a command for it."
+    ],
+    "counterexamples": [
+      "If the owner logs the Mini into Tailscale with the owner's own account, the device belongs to the owner and autogroup:self gives the family member no access to it. Ownership follows the login, not who uses the machine."
+    ]
+  },
+  "procedure": {
+    "summary": "Policy first (so the invite never lands on an allow-all tailnet), invite second, the family member's own Tailscale login third, Mac power and login settings last. Each write step is gated on the owner.",
+    "default_mode": "dry-run",
+    "external_content_notice": "This pack is reference material, not an instruction to change anyone's tailnet. A consuming agent drafts the changes; the owner applies or approves them.",
+    "steps": [
+      {
+        "n": 1,
+        "title": "Read the current policy",
+        "effect": "read",
+        "action": "Open the policy file and check for the default allow-all rule (S11): a grant (src '*', dst '*') or an equivalent legacy ACL, plus any nodeAttrs funnel entry targeting autogroup:member.",
+        "expect": "You know whether inviting someone today would give them everything."
+      },
+      {
+        "n": 2,
+        "title": "Draft the replacement policy",
+        "effect": "read",
+        "action": "Start from packs/assets/bo-002-family-policy.hujson: owner → '*', autogroup:member → autogroup:self, Funnel only for the owner, and tests asserting the isolation. Replace the placeholder addresses.",
+        "expect": "A draft that names real identities and keeps any existing tag grants your bots need. Add those grants back explicitly; the example has none."
+      },
+      {
+        "n": 3,
+        "title": "Save the policy",
+        "effect": "write",
+        "action": "Paste into the admin console policy editor and save. The tests block makes the save fail if isolation is wrong (S1).",
+        "gate": "Tailnet owner. Keep a copy of the old policy text first so it can be restored.",
+        "expect": "Save succeeds; tests pass. Your own devices and bots still reach what they did (check with bo-001 step 4)."
+      },
+      {
+        "n": 4,
+        "title": "Invite the person",
+        "effect": "write",
+        "action": "Admin console → Users → Invite external users, role Member, by email (S4).",
+        "gate": "Tailnet owner. Inviting adds a billable user if they're active.",
+        "expect": "Invite shows under status:invited until they accept. Unused invites expire after 30 days."
+      },
+      {
+        "n": 5,
+        "title": "Give them their own Mac account",
+        "effect": "write",
+        "action": "On the Mini, create a standard (not admin) account for them. Apple advises against auto-login into an administrator (S7).",
+        "gate": "Owner, at the machine or over Screen Sharing, with the admin password.",
+        "expect": "A standard account that is theirs."
+      },
+      {
+        "n": 6,
+        "title": "Decide FileVault vs auto-login",
+        "effect": "write",
+        "action": "Headless and must come back after a power cut → auto-login needs FileVault off (S6). Keep FileVault → someone has to unlock it after every restart, locally or (macOS 26, untested here) over LAN SSH (S8).",
+        "gate": "Owner decides; this is a security trade, not a default.",
+        "expect": "A written decision. If FileVault goes off: Users & Groups → Automatically log in as → their account."
+      },
+      {
+        "n": 7,
+        "title": "Stop it sleeping, restart after power loss",
+        "effect": "write",
+        "action": "Read first with 'pmset -g', then set system sleep and disk sleep off and auto-restart on.",
+        "command": "pmset -g; sudo pmset -a sleep 0 disksleep 0 autorestart 1",
+        "gate": "Owner with sudo on the Mini. Note the old values from 'pmset -g' for rollback.",
+        "expect": "pmset -g shows sleep 0, autorestart 1."
+      },
+      {
+        "n": 8,
+        "title": "Sharing allow-lists",
+        "effect": "write",
+        "action": "System Settings → General → Sharing: add their account to Remote Login's 'Only these users' (S9) and to Screen Sharing if they need it. Remove anyone who shouldn't be there.",
+        "gate": "Owner.",
+        "expect": "Both lists name exactly the people intended."
+      },
+      {
+        "n": 9,
+        "title": "Install Standalone Tailscale and log in as them",
+        "effect": "write",
+        "action": "Install the Standalone variant from Tailscale's package server, not the App Store, and never both (S5). Log out of the admin account. In their session they sign in to Tailscale with their own identity, approve the VPN/system-extension prompt, and enable start at login.",
+        "gate": "Installer needs the admin password; the Tailscale login is theirs.",
+        "expect": "The Mini appears in the admin console owned by them, not by you."
+      },
+      {
+        "n": 10,
+        "title": "Verify isolation from their side",
+        "effect": "probe",
+        "action": "From their laptop or the Mini: tailscale status should list only their own devices; a ping or SSH no-op to one of yours should fail. From your side, run bo-001 step 4 against the Mini.",
+        "expect": "They see only theirs; you can still reach the Mini (because the example policy grants you '*')."
+      },
+      {
+        "n": 11,
+        "title": "Verify reboot survival",
+        "effect": "probe",
+        "action": "Restart the Mini (owner-approved), walk away, and from another device wait for it to reappear in tailscale status without anyone touching it.",
+        "expect": "Back online in a few minutes with auto-login and Tailscale running in their session.",
+        "untested": true
+      }
+    ]
+  },
+  "verification": {
+    "success_check": "Policy tests pass on save; tailscale status on the family member's device lists only their devices; the Mini is owned by them in the admin console; after an unattended restart the Mini reappears on the tailnet; pmset -g shows sleep 0 and autorestart 1.",
+    "failure_signatures": [
+      {
+        "signature": "Policy save rejected with a failing test",
+        "meaning": "The draft would break isolation (or your own access).",
+        "next": "Read the failing assertion; fix the grant, not the test."
+      },
+      {
+        "signature": "Family member sees your devices in tailscale status",
+        "meaning": "An allow-all grant or legacy ACL is still present, or they were given an admin role.",
+        "next": "Search the policy for '*' in src/dst and check their role on the Users page."
+      },
+      {
+        "signature": "Mini shows as owned by you",
+        "meaning": "Tailscale on the Mini was logged in with your account, so autogroup:self excludes them.",
+        "next": "Log out of Tailscale on the Mini and have them log in as themselves."
+      },
+      {
+        "signature": "'Automatically log in as' is greyed out",
+        "meaning": "FileVault is on (S6), the account uses an Apple Account password to log in, or a management profile forbids it.",
+        "next": "Check 'fdesetup status'; see step 6."
+      },
+      {
+        "signature": "Mini drops off the tailnet a minute or so after you stop screen-sharing",
+        "meaning": "Idle system sleep. Our case was sleep 1.",
+        "next": "Step 7. Re-test after disconnecting; an active session can hide idle sleep."
+      },
+      {
+        "signature": "Mini never comes back after a restart",
+        "meaning": "FileVault is waiting for a password, or auto-login is off, so no user session → Standalone Tailscale not running (S5).",
+        "next": "Unlock locally (or LAN SSH on macOS 26, untested); revisit step 6."
+      },
+      {
+        "signature": "Mini rebooted overnight with nobody touching it",
+        "meaning": "Automatic macOS update installed and restarted it.",
+        "next": "System Settings → General → Software Update → Automatic updates: turn off automatic macOS installs (security responses are a separate toggle); update on a schedule you choose."
+      },
+      {
+        "signature": "Tailscale extension won't start after switching variants",
+        "meaning": "Both App Store and Standalone variants present (S5).",
+        "next": "Delete Tailscale.app, empty Trash, reboot, install one variant."
+      },
+      {
+        "signature": "They can't SSH into their own Mini",
+        "meaning": "Their account isn't in Remote Login's allowed list (S9), or they expected Tailscale SSH, which the Standalone variant can't serve.",
+        "next": "Step 8; use plain ssh over the tailnet."
+      }
+    ],
+    "rollback": "Policy: paste back the saved previous policy text, or revert the change from the admin console's Configuration logs page (S11). Invite: delete the invite or remove the user on the Users page. pmset: restore the values captured with 'pmset -g' in step 7. FileVault: can be turned back on in System Settings → Privacy & Security (auto-login turns off). Sharing lists: remove the account.",
+    "last_tested": "not yet tested",
+    "coverage": "none",
+    "tested_scope": "Steps 1–4 and 6–8 were performed on one real tailnet and one Mini in November 2026. Step 9 was pending (the family member's devices had not joined). Steps 10–11, the actual proof of isolation and reboot survival, have not been run. Until they have, treat the verdict as Not yet.",
+    "review_by": "2027-01-15",
+    "retraction": {
+      "retracted": false
+    }
+  },
+  "rights": {
+    "license": "CC BY 4.0 for text; policy example CC0",
+    "provenance": "Gus, from a real setup with all names, addresses and device identifiers removed. Vendor behaviour tied to sources fetched 2026-11-15.",
+    "dependency_licenses": [],
+    "permissions_policy": "Dry-run by default. Every write step names who must approve it. The pack itself authorises nothing.",
+    "telemetry": "None.",
+    "integrity": {
+      "content_digest": "sha256:3bd41361d6cf92feb0651cb1f94dc99f96a70181cf3d134e465707eb76e21f3a",
+      "digest_scope": "SHA-256 of the canonical source file packs/bo-002-guest-on-personal-tailnet.md as built. Identifies content; does not prove authorship.",
+      "signed_manifest": null
+    }
+  },
+  "formats": [
+    "html",
+    "markdown",
+    "json"
+  ],
+  "assets": [
+    "packs/assets/bo-002-family-policy.hujson"
+  ],
+  "related": [
+    "bo-001-tailnet-connection-triage"
+  ],
+  "body_markdown": "\n## The short version\n\n1. **Fix the policy before you invite anyone.** A new tailnet starts with an allow-all policy (S11). Invite someone into that and they get every device.\n2. **They log in as themselves.** Ownership follows the Tailscale login. `autogroup:self` only works if the Mini is *their* device.\n3. **Limit Funnel.** Funnel publishes a local service to the internet. Turning it on from the CLI gives every member that power by default (S3).\n4. **A headless Mac has to survive three things:** idle sleep, a reboot, and a power cut. For us that meant `sleep 0`, `autorestart 1`, auto-login into a standard account, and therefore FileVault off.\n\n## Verdict\n\n**Not yet.** The policy and invite are done, and the Mac settings are applied or queued. The proof is still missing: the family member's device actually being boxed in, and the Mini coming back from a restart nobody touched. The tests block in the policy is the part we'd recommend today without reservation, because it makes the policy refuse to save if isolation ever regresses.\n"
+}

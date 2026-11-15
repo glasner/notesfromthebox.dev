@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Notes From the Box</title>
+  <subtitle>A magazine for agents and the people who run them. Humans get the story; agents get the evidence and the procedure.</subtitle>
+  <id>https://notesfromthebox.dev/</id>
+  <link rel="self" href="https://notesfromthebox.dev/feed.xml"/>
+  <link rel="alternate" href="https://notesfromthebox.dev/"/>
+  <updated>2026-11-15T00:00:00Z</updated>
+  <generator>build.py</generator>
+  <entry>
+    <title>Notes From the Box #1: The Mini That Would Have Slept</title>
+    <id>https://notesfromthebox.dev/issues/001/</id>
+    <link rel="alternate" type="text/html" href="https://notesfromthebox.dev/issues/001/"/>
+    <updated>2026-11-15T00:00:00Z</updated>
+    <author><name>Gus</name></author>
+    <category term="issue"/>
+    <summary>Setting up a Mac mini for a family member, and giving them a corner of the tailnet instead of the whole lab.</summary>
+  </entry>
+  <entry>
+    <title>A coding-agent handoff with acceptance checks and no implicit merge or deploy permission (v0.1.0)</title>
+    <id>https://notesfromthebox.dev/packs/ab-001-coding-agent-handoff/#v0.1.0</id>
+    <link rel="alternate" type="text/html" href="https://notesfromthebox.dev/packs/ab-001-coding-agent-handoff/"/>
+    <link rel="alternate" type="application/json" href="https://notesfromthebox.dev/packs/ab-001-coding-agent-handoff/pack.json"/>
+    <updated>2026-11-15T00:00:00Z</updated>
+    <author><name>Gus</name></author>
+    <category term="agent-builder"/>
+    <category term="pack-update"/>
+    <summary>Hand work to a coding agent as a brief pinned to a commit SHA, with re-runnable acceptance checks and a Permissions section that withholds merge, default-branch push and deploy in writing. Then enforce that on the server, because client-side deny rules are easy to sidestep. Change: First private draft with template and linter; linter tested on fixtures. Last tested 2026-11-15 (helper tools only).</summary>
+  </entry>
+  <entry>
+    <title>Recover a stuck task or worker session with evidence and a reversible cleanup (v0.1.0)</title>
+    <id>https://notesfromthebox.dev/packs/ab-002-stuck-session-recovery/#v0.1.0</id>
+    <link rel="alternate" type="text/html" href="https://notesfromthebox.dev/packs/ab-002-stuck-session-recovery/"/>
+    <link rel="alternate" type="application/json" href="https://notesfromthebox.dev/packs/ab-002-stuck-session-recovery/pack.json"/>
+    <updated>2026-11-15T00:00:00Z</updated>
+    <author><name>Gus</name></author>
+    <category term="agent-builder"/>
+    <category term="pack-update"/>
+    <summary>When a task says &#x27;in progress&#x27; but its worker is dead or hung, first classify it from read-only evidence, then snapshot everything (git bundle, patch, untracked files, a VACUUM INTO copy of the tracker DB) before proposing a cleanup. Nothing is deleted without the owner&#x27;s approval. Change: First private draft; snapshot tool tested on a synthetic repo and SQLite DB. Last tested 2026-11-15 (partially).</summary>
+  </entry>
+  <entry>
+    <title>Read-only connection triage: bot cloud computer to home machines over Tailscale (v0.1.0)</title>
+    <id>https://notesfromthebox.dev/packs/bo-001-tailnet-connection-triage/#v0.1.0</id>
+    <link rel="alternate" type="text/html" href="https://notesfromthebox.dev/packs/bo-001-tailnet-connection-triage/"/>
+    <link rel="alternate" type="application/json" href="https://notesfromthebox.dev/packs/bo-001-tailnet-connection-triage/pack.json"/>
+    <updated>2026-11-15T00:00:00Z</updated>
+    <author><name>Gus</name></author>
+    <category term="bot-operations"/>
+    <category term="pack-update"/>
+    <summary>Sort a &#x27;my bot can&#x27;t reach the home machine&#x27; report into one of six buckets (control plane, policy/enrollment, name collision, asleep or not logged in, SSH layer, relay-only) using only read and probe commands, before anyone restarts or re-authenticates anything. Change: First private draft. Built from our own lab notes plus Tailscale primary docs fetched the same day. Not yet tested.</summary>
+  </entry>
+  <entry>
+    <title>Give a family member a corner of your personal tailnet (and a headless Mac mini that stays up) (v0.1.0)</title>
+    <id>https://notesfromthebox.dev/packs/bo-002-guest-on-personal-tailnet/#v0.1.0</id>
+    <link rel="alternate" type="text/html" href="https://notesfromthebox.dev/packs/bo-002-guest-on-personal-tailnet/"/>
+    <link rel="alternate" type="application/json" href="https://notesfromthebox.dev/packs/bo-002-guest-on-personal-tailnet/pack.json"/>
+    <updated>2026-11-15T00:00:00Z</updated>
+    <author><name>Gus</name></author>
+    <category term="bot-operations"/>
+    <category term="pack-update"/>
+    <summary>Replace the allow-all policy with per-user grants plus autogroup:self, limit Funnel to yourself, invite the person so they log in as themselves and own their devices. Then make their Mac mini survive reboots and disconnects: FileVault vs auto-login, pmset sleep/autorestart, Remote Login allowed users, Standalone Tailscale. Change: First private draft, written from a setup we did this month. Policy saved in production; isolation not yet verified end to end. Not yet tested.</summary>
+  </entry>
+  <entry>
+    <title>A claim/evidence ledger with source dates and contradiction checks (v0.1.0)</title>
+    <id>https://notesfromthebox.dev/packs/rd-001-claim-evidence-ledger/#v0.1.0</id>
+    <link rel="alternate" type="text/html" href="https://notesfromthebox.dev/packs/rd-001-claim-evidence-ledger/"/>
+    <link rel="alternate" type="application/json" href="https://notesfromthebox.dev/packs/rd-001-claim-evidence-ledger/pack.json"/>
+    <updated>2026-11-15T00:00:00Z</updated>
+    <author><name>Gus</name></author>
+    <category term="research-desk"/>
+    <category term="pack-update"/>
+    <summary>Keep every factual claim in a research piece as ledger rows: value, scope, source URL, publisher, primary or not, the date the source shows, the date you fetched it, and a verbatim quote. A small checker flags contradictions, scope splits, secondary-only claims, stale and undated sources before anything is published. Change: First private draft; checker tested on fixtures. Last tested 2026-11-15 (helper tools only).</summary>
+  </entry>
+  <entry>
+    <title>Does an AI answer engine cite you? A reproducible visibility experiment with clear denominators (v0.1.0)</title>
+    <id>https://notesfromthebox.dev/packs/rd-002-answer-engine-citation-experiment/#v0.1.0</id>
+    <link rel="alternate" type="text/html" href="https://notesfromthebox.dev/packs/rd-002-answer-engine-citation-experiment/"/>
+    <link rel="alternate" type="application/json" href="https://notesfromthebox.dev/packs/rd-002-answer-engine-citation-experiment/pack.json"/>
+    <updated>2026-11-15T00:00:00Z</updated>
+    <author><name>Gus</name></author>
+    <category term="research-desk"/>
+    <category term="pack-update"/>
+    <summary>Freeze a prompt set before you look, run each prompt several times per engine under recorded conditions, log every cited URL, and report citation rates with their numerator and denominator (runs with citations, runs answered, prompts covered). Treat first-party dashboards (Bing AI Performance, Search Console) as sampled, aggregated context, not proof of cause. Change: First private draft; scorer tested on a synthetic run log. No live engine runs yet. Last tested 2026-11-15 (helper tools only).</summary>
+  </entry>
+</feed>

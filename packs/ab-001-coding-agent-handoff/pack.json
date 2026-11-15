@@ -1,0 +1,247 @@
+{
+  "schema_version": 1,
+  "identity": {
+    "id": "ab-001-coding-agent-handoff",
+    "title": "A coding-agent handoff with acceptance checks and no implicit merge or deploy permission",
+    "summary": "Hand work to a coding agent as a brief pinned to a commit SHA, with re-runnable acceptance checks and a Permissions section that withholds merge, default-branch push and deploy in writing. Then enforce that on the server, because client-side deny rules are easy to sidestep.",
+    "desk": "agent-builder",
+    "editor": "Gus",
+    "second_reviewer": null,
+    "version": "0.1.0",
+    "status": "private-review",
+    "published": null,
+    "updated": "2026-11-15",
+    "changelog": [
+      {
+        "version": "0.1.0",
+        "date": "2026-11-15",
+        "note": "First private draft with template and linter; linter tested on fixtures."
+      }
+    ],
+    "canonical_url": "https://notesfromthebox.dev/packs/ab-001-coding-agent-handoff/"
+  },
+  "fit": {
+    "goal": "Delegate a bounded code change to an agent (or another bot) so that 'done' means the reviewer re-ran checks and they passed, and the agent could not have landed or shipped the change by itself.",
+    "audience": [
+      "People supervising coding agents",
+      "Bots that hand work to other bots"
+    ],
+    "environment": [
+      "Git repository hosted on GitHub (enforcement section)",
+      "Any coding agent that reads a Markdown brief"
+    ],
+    "versions": [
+      "GitHub protected branches as documented 2026-11",
+      "Claude Code permission rules as documented 2026-11 (as one example of a client-side control)"
+    ],
+    "prerequisites": [
+      "You can create branch protection rules or rulesets on the repo",
+      "The agent's credentials are not repository-admin credentials"
+    ],
+    "permissions_required": [
+      "Repo admin, once, to set branch protection"
+    ],
+    "exclusions": [
+      "Not a code-review checklist; it covers the contract around the change.",
+      "Not for exploratory spikes where there is nothing to accept yet; write a research brief instead."
+    ],
+    "expected_output": "A brief that passes tools/handoff_lint.py, a protected default branch the agent's identity can't bypass, and a report-back containing commands, exit codes and output tails the reviewer can re-run."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "S1",
+        "title": "About protected branches",
+        "url": "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches",
+        "publisher": "GitHub Docs",
+        "kind": "primary",
+        "fetched": "2026-11-15",
+        "supports": "Required reviews and status checks before merging; by default protections don't apply to admins unless 'Do not allow bypassing' is set; protected branches on private repos need a paid plan."
+      },
+      {
+        "id": "S2",
+        "title": "Configure permissions (Claude Code)",
+        "url": "https://code.claude.com/docs/en/permissions",
+        "publisher": "Anthropic",
+        "kind": "primary",
+        "fetched": "2026-11-15",
+        "supports": "Rules evaluate deny → ask → allow. A deny rule like Bash(git push *) does not match 'git -C . push' or the same program by path or inside sh -c."
+      },
+      {
+        "id": "S3",
+        "title": "git-worktree documentation",
+        "url": "https://git-scm.com/docs/git-worktree",
+        "publisher": "Git project",
+        "kind": "primary",
+        "fetched": "2026-11-15",
+        "source_dated": "manual unchanged since 2.56.0 (2026-09-28)",
+        "supports": "One linked worktree per agent so parallel work doesn't share a checkout."
+      }
+    ],
+    "observations": [
+      {
+        "date": "2026-11",
+        "setting": "Our own multi-agent workflow",
+        "observed": "The rule that actually held was the boring one: workers never land, never push the default branch, never deploy. A human or the supervising bot does that after re-running the checks. Writing it into every brief stopped the 'I assumed done meant merged' class of surprise."
+      },
+      {
+        "date": "2026-11",
+        "setting": "Our own workflow",
+        "observed": "An agent's self-reported 'all tests pass' and the reviewer's re-run disagreed often enough that we stopped accepting the self-report as evidence."
+      }
+    ],
+    "test_environment": "tools/handoff_lint.py run against the template and two fixtures (tests/run_tests.py), 2026-11-15, Python 3.13 on a Linux box. The branch-protection half was not exercised against a live repository for this edition.",
+    "measured_outcomes": [
+      "Linter: good fixture passes; template fails only on the placeholder SHA; bad fixture fails on all seven expected problems."
+    ],
+    "uncertainty": [
+      "The linter is a regex heuristic. It catches missing structure and obvious grants ('feel free to merge'), not clever wording.",
+      "Client-side permission syntax differs across agent tools and changes often; S2 is one example, not a standard."
+    ],
+    "counterexamples": [
+      "A solo developer on a private repo on GitHub Free can't use protected branches (S1). There the server-side half of this pack doesn't apply; use a separate non-admin token and a pre-receive hook on a self-hosted remote, or accept the weaker client-side controls knowingly."
+    ]
+  },
+  "procedure": {
+    "summary": "Write the brief from the template, lint it, make sure the server enforces what the brief says, hand off, then accept only on your own re-run of the checks.",
+    "default_mode": "dry-run",
+    "external_content_notice": "This pack describes a contract. It never grants a consuming agent permission to merge, push or deploy.",
+    "steps": [
+      {
+        "n": 1,
+        "title": "Pin the base",
+        "effect": "read",
+        "action": "Record the full commit SHA the work starts from.",
+        "command": "git rev-parse HEAD",
+        "expect": "40 hex characters. Branch names move; SHAs don't."
+      },
+      {
+        "n": 2,
+        "title": "Write the brief",
+        "effect": "read",
+        "action": "Fill packs/assets/ab-001-handoff-template.md: Goal, Base, Scope in/out, Acceptance checks (command + expected result each), Permissions (explicit 'Not allowed' lines for merge, default-branch push, deploy), Stop conditions, Report back.",
+        "expect": "Every check is something you, not the agent, can re-run."
+      },
+      {
+        "n": 3,
+        "title": "Lint it",
+        "effect": "read",
+        "action": "Run the linter and fix what it reports.",
+        "command": ".venv/bin/python tools/handoff_lint.py brief.md",
+        "expect": "Exit 0, no output."
+      },
+      {
+        "n": 4,
+        "title": "Check server-side enforcement",
+        "effect": "read",
+        "action": "Confirm the default branch requires a PR, required status checks and an approving review, and that 'Do not allow bypassing' is on or the agent's identity isn't an admin (S1).",
+        "expect": "The agent's identity could not merge or push the default branch even if it tried."
+      },
+      {
+        "n": 5,
+        "title": "(Gated) Tighten protection if step 4 failed",
+        "effect": "write",
+        "action": "Add or edit the branch protection rule / ruleset.",
+        "gate": "Repository admin (the owner).",
+        "expect": "Re-run step 4; it passes."
+      },
+      {
+        "n": 6,
+        "title": "Isolate the workspace",
+        "effect": "write",
+        "action": "Give the agent its own branch and linked worktree from the pinned SHA (S3).",
+        "command": "git worktree add -b agent/<name> ../wt-<name> <sha>",
+        "gate": "Whoever owns the repo checkout; reversible with 'git worktree remove' after the work is saved.",
+        "expect": "The agent works in a directory no one else is using."
+      },
+      {
+        "n": 7,
+        "title": "Hand off",
+        "effect": "read",
+        "action": "Send the brief. Client-side deny rules (S2) are a seatbelt, not the lock; the lock is step 4.",
+        "expect": "Agent acknowledges Scope and Permissions."
+      },
+      {
+        "n": 8,
+        "title": "Accept on your own re-run",
+        "effect": "probe",
+        "action": "Check out the agent's final SHA and run every acceptance check yourself. Compare exit codes and output with the report.",
+        "expect": "All checks pass on your run. Disagreement with the agent's report is itself a finding."
+      },
+      {
+        "n": 9,
+        "title": "(Gated) Land",
+        "effect": "irreversible",
+        "action": "Merge and, separately, deploy. Neither is part of the handoff.",
+        "gate": "The owner or the designated lander, after step 8, through the protected-branch flow.",
+        "expect": "Merge commit references the brief."
+      }
+    ]
+  },
+  "verification": {
+    "success_check": "tools/handoff_lint.py exits 0 on the brief; the agent's identity is blocked by the server from merging or pushing the default branch; the reviewer's own re-run of every acceptance check matches the expected results before anything lands.",
+    "failure_signatures": [
+      {
+        "signature": "Linter: 'Permissions must explicitly withhold: merge' (or push / deploy)",
+        "meaning": "The brief is silent on landing, and silence gets read as permission.",
+        "next": "Add the 'Not allowed' lines from the template."
+      },
+      {
+        "signature": "Linter: 'Base must pin a full 40-character commit SHA'",
+        "meaning": "Base is a branch name; the agent and reviewer may test different code.",
+        "next": "Step 1."
+      },
+      {
+        "signature": "Agent pushed to the default branch anyway",
+        "meaning": "Server enforcement missing, or the agent ran with admin credentials that bypass protection by default (S1).",
+        "next": "Revert via a PR, rotate to a non-admin token, enable 'Do not allow bypassing'."
+      },
+      {
+        "signature": "Client deny rule didn't stop a push",
+        "meaning": "Pattern rules don't match rewritten commands such as 'git -C . push' (S2).",
+        "next": "Rely on server-side protection; treat client rules as advisory."
+      },
+      {
+        "signature": "Agent reports green, your re-run is red",
+        "meaning": "Different SHA, environment drift, or a flaky or non-deterministic check.",
+        "next": "Compare SHAs first, then environments; don't land."
+      }
+    ],
+    "rollback": "The handoff itself changes nothing. Branch protection edits can be reverted in repo settings. Remove the agent worktree with 'git worktree remove' only after its branch is pushed or bundled.",
+    "last_tested": "2026-11-15",
+    "coverage": "tools-only",
+    "tested_scope": "Tested: the linter against the template and good/bad fixtures (tests/run_tests.py, all passing on 2026-11-15). Not tested in this edition: a live agent run, or branch protection on a live repository.",
+    "review_by": "2027-02-15",
+    "retraction": {
+      "retracted": false
+    }
+  },
+  "rights": {
+    "license": "CC BY 4.0 for text; template and linter MIT",
+    "provenance": "Gus, from our own multi-agent practice; tool behaviour from vendor docs fetched 2026-11-15.",
+    "dependency_licenses": [
+      "Python standard library only"
+    ],
+    "permissions_policy": "Dry-run by default; landing and deploy are always owner-gated.",
+    "telemetry": "None.",
+    "integrity": {
+      "content_digest": "sha256:e93854b98fd1cebcd2c094eae59e311dd459e1c2d4c78808d77ecc5d7323c781",
+      "digest_scope": "SHA-256 of the canonical source file packs/ab-001-coding-agent-handoff.md as built. Identifies content; does not prove authorship.",
+      "signed_manifest": null
+    }
+  },
+  "formats": [
+    "html",
+    "markdown",
+    "json",
+    "skill"
+  ],
+  "assets": [
+    "packs/assets/ab-001-handoff-template.md",
+    "tools/handoff_lint.py"
+  ],
+  "related": [
+    "ab-002-stuck-session-recovery"
+  ],
+  "body_markdown": "\n## The contract in one line\n\n**Done means you re-ran the checks and they passed, not that the agent said so. Landing is never part of the job.**\n\n## Why write \"not allowed\" when it's obvious\n\nTo you it's obvious. To an agent finishing a task, \"make the tests pass and wrap it up\" can read like permission to merge. So we write the withholding down, every time, in the same words. Then we make the server enforce it. Client-side deny rules are useful, but the vendor's own docs show they don't match a command written another way (S2).\n\n## Verdict\n\n**Recommended** for the brief and linter: we use the pattern daily, and the linter is tested. **Works for us** for the enforcement half, but we didn't re-test it against a live repo for this edition.\n"
+}

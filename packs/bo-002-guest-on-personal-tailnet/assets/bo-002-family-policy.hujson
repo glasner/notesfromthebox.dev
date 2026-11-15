@@ -1,0 +1,39 @@
+// Example tailnet policy: owner reaches everything, a family member reaches only
+// their own devices, only the owner may use Funnel.
+// Placeholders: owner@example.com, family@example.com. Replace before use.
+// Validate in the admin console's policy editor; the "tests" block makes the save
+// fail if the isolation ever regresses.
+{
+  "grants": [
+    // The tailnet owner can reach every device (including the family member's).
+    // Drop "*" to something narrower if you don't need that.
+    { "src": ["owner@example.com"], "dst": ["*"], "ip": ["*"] },
+
+    // Every member can reach their own devices, and nothing else.
+    { "src": ["autogroup:member"], "dst": ["autogroup:self"], "ip": ["*"] }
+  ],
+
+  "ssh": [
+    // Tailscale SSH (only where the server side supports it) to your own devices, as non-root.
+    {
+      "action": "check",
+      "src": ["autogroup:member"],
+      "dst": ["autogroup:self"],
+      "users": ["autogroup:nonroot"]
+    }
+  ],
+
+  // Funnel publishes a local service to the public internet. Limit it to the owner.
+  "nodeAttrs": [
+    { "target": ["owner@example.com"], "attr": ["funnel"] }
+  ],
+
+  "tests": [
+    // The family member can reach their own device's SSH port...
+    { "src": "family@example.com", "accept": ["family@example.com:22"] },
+    // ...but not the owner's devices.
+    { "src": "family@example.com", "deny": ["owner@example.com:22", "owner@example.com:443"] },
+    // The owner can still reach the family member's device.
+    { "src": "owner@example.com", "accept": ["family@example.com:22"] }
+  ]
+}

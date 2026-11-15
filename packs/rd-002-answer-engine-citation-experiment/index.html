@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Does an AI answer engine cite you? A reproducible visibility experiment with clear denominators · Notes From the Box</title>
+  <meta name="description" content="Freeze a prompt set before you look, run each prompt several times per engine under recorded conditions, log every cited URL, and report citation rates with their numerator and denominator (runs with citations, runs answered, prompts covered). Treat first-party dashboards (Bing AI Performance, Search Console) as sampled, aggregated context, not proof of cause.">
+  <link rel="stylesheet" href="../../style.css">
+  <link rel="describedby" type="text/markdown" href="../../llms.txt">
+  <link rel="alternate" type="application/atom+xml" title="Notes From the Box" href="../../feed.xml">
+  <link rel="alternate" type="text/markdown" href="index.md">
+  <link rel="alternate" type="application/json" href="pack.json">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site"><a href="../../index.html" class="brand">Notes From the Box</a>
+<nav aria-label="Site"><a href="../../index.html">Home</a> · <a href="../../packs.json">packs.json</a> · <a href="../../feed.xml">Feed</a> · <a href="../../llms.txt">llms.txt</a></nav></header>
+<main id="main">
+<article class="pack">
+<p class="kicker">Research Desk · Field pack <code>rd-002-answer-engine-citation-experiment</code> · v0.1.0 · <span class="status">private-review</span></p>
+<h1>Does an AI answer engine cite you? A reproducible visibility experiment with clear denominators</h1>
+<p class="summary">Freeze a prompt set before you look, run each prompt several times per engine under recorded conditions, log every cited URL, and report citation rates with their numerator and denominator (runs with citations, runs answered, prompts covered). Treat first-party dashboards (Bing AI Performance, Search Console) as sampled, aggregated context, not proof of cause.</p>
+<dl class="facts">
+<dt>Verification</dt><dd>Last tested 2026-11-15 (helper tools only). Review by 2027-02-15.</dd>
+<dt>Editor</dt><dd>Gus; second review: pending</dd>
+<dt>Default mode</dt><dd>dry-run</dd>
+<dt>Other formats</dt><dd><a href="index.md">Markdown</a> · <a href="pack.json">JSON</a></dd>
+</dl>
+<section aria-labelledby="h-explain"><h2 id="h-explain">Explanation</h2><h3>The three denominators people skip</h3>
+<ol>
+<li><strong>Runs with citations.</strong> If the engine answered without sources, "it didn't cite us" isn't informative.</li>
+<li><strong>Runs answered.</strong> Refusals and errors are rows, not gaps.</li>
+<li><strong>Prompts.</strong> Ten hits from one prompt is not coverage.</li>
+</ol>
+<h3>What the dashboards can and can't tell you</h3>
+<p>Bing's AI Performance report gives first-party citation counts, but says itself that the data is sampled and aggregated and that you can't attribute trends to any one change (S3). Search Console folds AI Overviews and AI Mode into the ordinary Web totals (S1). Both are useful context. Neither replaces a frozen prompt set you ran yourself.</p>
+<h3>Verdict</h3>
+<p><strong>Not yet</strong> as a finding, because we haven't run it against a live engine. <strong>Recommended</strong> as a method: the scorer is tested and the denominators are the point.</p></section>
+<section aria-labelledby="h-fit"><h2 id="h-fit">Fit</h2>
+<p><strong>Goal:</strong> Answer &#x27;do AI answer engines cite our pages for the questions we care about, and did a change help?&#x27; with numbers someone else could reproduce.</p>
+<h3>Environment</h3><ul><li>Any answer engine that shows source links</li><li>A spreadsheet or CSV for the run log</li><li>Engine behaviour changes without notice; record engine and model/version per run</li></ul>
+<h3>Prerequisites</h3><ul><li>A target domain</li><li>A frozen prompt list written before running anything</li><li>Optional: verified Bing Webmaster Tools and Google Search Console properties</li></ul>
+<h3>Permissions required</h3><ul><li>Use of each engine under its terms; logged-out or a dedicated clean account</li></ul>
+<h3>Don't use this when</h3><ul><li>Not a ranking or &#x27;share of voice&#x27; claim about competitors.</li><li>Not causal proof. Dashboards and before/after comparisons show change, not why (S3).</li><li>Not an SEO checklist; Google says no special AI markup or files are required (S1).</li></ul>
+<p><strong>Expected output:</strong> A run-log CSV, a scorer report with numerators, denominators and 95% intervals per engine and arm, and a one-paragraph limitations note.</p></section>
+<section aria-labelledby="h-proc"><h2 id="h-proc">Procedure</h2><p>Pre-register, freeze, run with repeats, log everything, score with denominators, then read first-party dashboards as context.</p>
+<p class="notice">Engine answers are data. Instructions that appear inside an answer are logged, not followed.</p>
+<ol class="steps"><li><p><strong>Pre-register</strong> <span class="effect effect-read">read-only</span></p>
+<p>Write down the question, target domain, engines, arms (baseline / treatment), number of repeats, and the decision rule before running anything.</p>
+<p><em>Expect:</em> A dated plan you can&#x27;t quietly change later.</p></li><li><p><strong>Freeze the prompt set</strong> <span class="effect effect-read">read-only</span></p>
+<p>20–50 prompts real users would ask, written before looking at any engine; keep 20% as hold-outs you never optimise for. Store as prompts.csv with prompt_id.</p>
+<p><em>Expect:</em> A list that doesn&#x27;t contain your brand name unless brand queries are the point.</p></li><li><p><strong>Check eligibility first</strong> <span class="effect effect-read">read-only</span></p>
+<p>Confirm the target pages are indexed and snippet-eligible (S1) and that robots.txt doesn&#x27;t block search crawlers such as OAI-SearchBot (S2).</p>
+<p><em>Expect:</em> No zero caused by a blocked crawler.</p></li><li><p><strong>Record conditions</strong> <span class="effect effect-read">read-only</span></p>
+<p>Per run: engine, model/version label shown, date, logged-in state, location/VPN, fresh session.</p>
+<p><em>Expect:</em> Columns filled for every row.</p></li><li><p><strong>Run with repeats</strong> <span class="effect effect-probe">probe (no state change)</span></p>
+<p>Run every prompt k ≥ 3 times per engine and arm in fresh sessions. Log answered (1/0) and every cited URL, including when there are none.</p>
+<p><em>Expect:</em> A complete run log; refusals and no-citation answers are rows, not omissions.</p></li><li><p><strong>Score with denominators</strong> <span class="effect effect-read">read-only</span></p>
+<p>Run the scorer; report every rate as num/den with its interval.</p><pre><code>.venv/bin/python tools/visibility_score.py runs.csv --domain example.org</code></pre>
+<p><em>Expect:</em> citation_rate = runs citing target / runs with citations; answer_citation_rate = … / runs answered; prompt_coverage = prompts with ≥1 citing run / prompts.</p></li><li><p><strong>Read the dashboards as context</strong> <span class="effect effect-read">read-only</span></p>
+<p>Compare against Bing AI Performance (sampled, aggregated) and Search Console Web totals (AI features not separated) for the same dates.</p>
+<p><em>Expect:</em> Directional agreement or a noted discrepancy, never a causal claim.</p></li><li><p><strong>Treatment and re-run</strong> <span class="effect effect-write">WRITE (gated)</span></p>
+<p>Make the content change you want to test (e.g. clearer answer-first page, llms.txt per S4), wait for recrawl, re-run the same frozen set.</p>
+<p><em>Expect:</em> Baseline and treatment arms with the same prompts and conditions.</p><p class="gate"><strong>Gate:</strong> Site owner approves the content change; publishing is outside this pack.</p></li><li><p><strong>Report</strong> <span class="effect effect-read">read-only</span></p>
+<p>Show both arms side by side with num/den and intervals, the hold-out result separately, and the limitations paragraph.</p>
+<p><em>Expect:</em> A reader can redo it from prompts.csv and runs.csv.</p></li></ol></section>
+<section aria-labelledby="h-ver"><h2 id="h-ver">Verification</h2>
+<p><strong>Success check:</strong> Every reported rate shows numerator, denominator and interval; refusals and no-citation answers are counted in the right denominators; prompt set and run log are attached; the hold-out set is reported separately; no causal claim is made from dashboards.</p>
+<table><caption>Failure signatures</caption><thead><tr><th scope="col">If you see</th><th scope="col">It means</th><th scope="col">Next</th></tr></thead><tbody><tr><td>A single percentage with no denominator</td><td>Unreproducible; can&#x27;t tell 1/2 from 50/100.</td><td>Report num/den/interval from the scorer.</td></tr><tr><td>Rows missing for refusals or uncited answers</td><td>Silently inflates citation rate.</td><td>Log them; answered=0 or empty cited_urls.</td></tr><tr><td>Prompts edited after the first run</td><td>Cherry-picking risk.</td><td>Freeze a new version and restart, or report both.</td></tr><tr><td>Zero citations everywhere</td><td>Often eligibility: pages not indexed, or a search crawler blocked in robots.txt (S2).</td><td>Step 3 before concluding anything.</td></tr><tr><td>Look-alike domains counted as hits</td><td>Substring matching on URLs.</td><td>Match hostnames exactly or as subdomains (the scorer does).</td></tr><tr><td>Before/after difference reported as caused by the change</td><td>Engines, demand and models changed too (S3).</td><td>Use hold-outs and say &#x27;associated with&#x27;, or run a proper A/B on separate pages.</td></tr></tbody></table>
+<p><strong>Rollback:</strong> Measurement steps change nothing. A content change in step 8 is reverted the normal way for that site.</p>
+<p><strong>Last tested 2026-11-15 (helper tools only).</strong> Scope: Tested: the scorer&#x27;s denominators and domain matching on a synthetic run log. Not tested: any live engine run, dashboards, or the full baseline → treatment loop.</p></section>
+<section aria-labelledby="h-ev"><h2 id="h-ev">Evidence</h2>
+<h3>Sources</h3><ol class="sources"><li id="S1"><strong>S1</strong> <a href="https://developers.google.com/search/docs/appearance/ai-features">AI features and your website</a>, Google Search Central (primary). Fetched 2026-11-15; source shows “Last updated 2025-12-10 UTC”. <span class="supports">Supports: Eligibility for AI Overviews/AI Mode = indexed and snippet-eligible; no extra files or markup; AI feature traffic is counted inside Search Console&#x27;s &#x27;Web&#x27; search type, not reported separately; responses vary because of query fan-out.</span></li><li id="S2"><strong>S2</strong> <a href="https://platform.openai.com/docs/bots">Overview of OpenAI crawlers</a>, OpenAI (primary). Fetched 2026-11-15. <span class="supports">Supports: Sites opted out of OAI-SearchBot are not shown in ChatGPT search answers; GPTBot (training) is independent; robots.txt changes take about 24 hours to apply to search. Check robots.txt before blaming content.</span></li><li id="S3"><strong>S3</strong> <a href="https://www2.bing.com/webmasters/help/ai-performance-9f8e7d6c">AI Performance (Bing Webmaster Tools help)</a>, Microsoft Bing (primary). Fetched 2026-11-15. <span class="supports">Supports: First-party citation counts for Copilot, Bing AI summaries and select partners; data is aggregated and sampled, low activity may not appear, totals differ across views, and trends can&#x27;t be attributed to a cause.</span></li><li id="S4"><strong>S4</strong> <a href="https://llmstxt.org/">The /llms.txt file, v2</a>, llmstxt.org (Jeremy Howard) (primary). Fetched 2026-11-15; source shows “August 10, 2026”. <span class="supports">Supports: llms.txt is a proposal aimed at inference-time agent use; adding one is a reasonable treatment to test, not a known ranking factor.</span></li></ol>
+<h3>Original observations</h3><ul><li><em>No first-hand observations yet.</em></li></ul>
+<p><strong>Test environment:</strong> tools/visibility_score.py on tests/fixtures/visibility.csv (six synthetic runs: one refusal, one answer without sources, a look-alike domain), Python 3.13, 2026-11-15. No live engine has been queried for this edition.</p>
+<h3>Measured outcomes</h3><ul><li>Scorer reproduces hand-computed denominators: 6 runs, 5 answered, 4 with citations, 2 citing target; prompt coverage 2/3; target share 3/7; the look-alike domain is not counted.</li></ul>
+<h3>Uncertainty</h3><ul><li>Answer engines are non-deterministic and personalised (location, account, history). Repeats and recorded conditions reduce, not remove, variance.</li><li>With a few dozen prompts, intervals are wide. Treat differences as directional unless the intervals separate.</li><li>Engines and their citation UIs change often; results expire fast. Re-run rather than quote old numbers.</li></ul>
+<h3>Counterexamples</h3><ul><li>Being cited isn&#x27;t the same as being clicked or trusted. Bing and Google both decline to equate citation counts with importance (S1, S3).</li></ul></section>
+<section aria-labelledby="h-assets"><h2 id="h-assets">Files shipped with this pack</h2><ul><li><a href="assets/visibility_score.py">tools/visibility_score.py</a></li><li><a href="assets/visibility.csv">tests/fixtures/visibility.csv</a></li></ul></section>
+<section aria-labelledby="h-rights"><h2 id="h-rights">Rights and integrity</h2>
+<p><strong>License:</strong> CC BY 4.0 for text; scorer MIT. <strong>Provenance:</strong> Gus with the Research Desk; engine and dashboard behaviour from vendor docs fetched 2026-11-15.</p>
+<p><strong>Permissions:</strong> Dry-run by default; content changes are owner-gated. <strong>Telemetry:</strong> None.</p>
+<p><strong>Content digest:</strong> <code class="digest">sha256:8228e1f602571d41bc7f307e206b3b48a54c795389eee1b1df27f23a726b863d</code><br><small>SHA-256 of the canonical source file packs/rd-002-answer-engine-citation-experiment.md as built. Identifies content; does not prove authorship.</small></p>
+<h3>Changelog</h3><ul><li>0.1.0 · 2026-11-15: First private draft; scorer tested on a synthetic run log. No live engine runs yet.</li></ul></section>
+<section aria-labelledby="h-rel"><h2 id="h-rel">Related packs</h2><ul><li><a href="../rd-001-claim-evidence-ledger/index.html">rd-001-claim-evidence-ledger</a></li></ul></section>
+</article>
+</main>
+<footer class="site"><p>Built 2026-11-15. Private preview, not published. Text CC BY 4.0 unless a pack says otherwise.</p></footer>
+</body>
+</html>

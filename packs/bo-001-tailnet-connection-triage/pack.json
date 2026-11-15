@@ -1,0 +1,322 @@
+{
+  "schema_version": 1,
+  "identity": {
+    "id": "bo-001-tailnet-connection-triage",
+    "title": "Read-only connection triage: bot cloud computer to home machines over Tailscale",
+    "summary": "Sort a 'my bot can't reach the home machine' report into one of six buckets (control plane, policy/enrollment, name collision, asleep or not logged in, SSH layer, relay-only) using only read and probe commands, before anyone restarts or re-authenticates anything.",
+    "desk": "bot-operations",
+    "editor": "Gus",
+    "second_reviewer": null,
+    "version": "0.1.0",
+    "status": "private-review",
+    "published": null,
+    "updated": "2026-11-15",
+    "changelog": [
+      {
+        "version": "0.1.0",
+        "date": "2026-11-15",
+        "note": "First private draft. Built from our own lab notes plus Tailscale primary docs fetched the same day."
+      }
+    ],
+    "canonical_url": "https://notesfromthebox.dev/packs/bo-001-tailnet-connection-triage/"
+  },
+  "fit": {
+    "goal": "Find out, without changing anything, why a bot running on a cloud computer cannot reach (or cannot SSH into) a machine at its owner's home over a shared tailnet.",
+    "audience": [
+      "Bot owners running one or more bots on a hosted computer",
+      "Bots doing their own first-line network triage"
+    ],
+    "environment": [
+      "Linux cloud VM running the tailscale CLI (the bot's side)",
+      "macOS or Linux home machine on the same tailnet",
+      "Plain OpenSSH over the tailnet (not Tailscale SSH)"
+    ],
+    "versions": [
+      "A current Tailscale client; commands and flags checked against the CLI reference 'Last validated Jul 30, 2026'"
+    ],
+    "prerequisites": [
+      "The bot's computer is already logged in to the tailnet",
+      "You know the peer's machine name or Tailscale IP",
+      "jq is optional but handy"
+    ],
+    "permissions_required": [
+      "Read the bot computer's own tailscale status (no sudo needed on most installs)",
+      "Nothing on the home machine"
+    ],
+    "exclusions": [
+      "Do not use this pack to fix anything. Every repair is a separate, owner-approved change.",
+      "Not for subnet routers, exit nodes or Tailscale Services; those add failure modes this pack does not cover.",
+      "Not for Tailscale SSH servers; see the SSH bucket for why most Mac installs can't be one anyway."
+    ],
+    "expected_output": "A one-line bucket label, the evidence lines that put it there, and the single next action, which is usually a question for the owner, not a command."
+  },
+  "evidence": {
+    "sources": [
+      {
+        "id": "S1",
+        "title": "What happens if the coordination server is down?",
+        "url": "https://tailscale.com/docs/reference/coordination-server-down",
+        "publisher": "Tailscale",
+        "kind": "primary",
+        "fetched": "2026-11-15",
+        "source_dated": "Last validated May 2, 2025",
+        "supports": "Existing peers keep working and cached rules stay enforced when the control plane is unreachable; new devices, key refresh and rule changes do not."
+      },
+      {
+        "id": "S2",
+        "title": "Client restart can't connect to other clients if coordination server is down (issue 6458)",
+        "url": "https://github.com/tailscale/tailscale/issues/6458",
+        "publisher": "Tailscale on GitHub",
+        "kind": "primary",
+        "fetched": "2026-11-15",
+        "source_dated": "2022-11-23 maintainer comment",
+        "supports": "A node that restarts while control is down does not know its peers. Hence: do not restart tailscaled during a control outage."
+      },
+      {
+        "id": "S3",
+        "title": "Hypergrowth isn't always easy",
+        "url": "https://tailscale.com/blog/hypergrowth-isnt-always-easy",
+        "publisher": "Tailscale blog",
+        "kind": "primary",
+        "fetched": "2026-11-15",
+        "supports": "Restart-forgets-netmap limitation and the stated plan to cache the network map between runs. The fix may land; recheck before relying on the restart warning."
+      },
+      {
+        "id": "S4",
+        "title": "Tailscale CLI reference (status, ping, netcheck, whois)",
+        "url": "https://tailscale.com/kb/1080/cli",
+        "publisher": "Tailscale",
+        "kind": "primary",
+        "fetched": "2026-11-15",
+        "source_dated": "Last validated Jul 30, 2026",
+        "supports": "Meaning of status connection types (direct / relay / peer-relay), ping --until-direct and --tsmp, whois fields."
+      },
+      {
+        "id": "S5",
+        "title": "Device connectivity",
+        "url": "https://tailscale.com/kb/1411/device-connectivity",
+        "publisher": "Tailscale",
+        "kind": "primary",
+        "fetched": "2026-11-15",
+        "source_dated": "Last validated Jan 7, 2026",
+        "supports": "Relayed connections are expected under hard NAT; netcheck MappingVariesByDestIP is the key field."
+      },
+      {
+        "id": "S6",
+        "title": "Machine names",
+        "url": "https://tailscale.com/kb/1098/machine-names",
+        "publisher": "Tailscale",
+        "kind": "primary",
+        "fetched": "2026-11-15",
+        "source_dated": "Last validated Jan 5, 2026",
+        "supports": "Duplicate OS hostnames produce a '-1' style machine name that persists even after the other device is renamed."
+      },
+      {
+        "id": "S7",
+        "title": "Three ways to run Tailscale on macOS",
+        "url": "https://tailscale.com/kb/1065/macos-variants",
+        "publisher": "Tailscale",
+        "kind": "primary",
+        "fetched": "2026-11-15",
+        "source_dated": "Last validated Jan 5, 2026",
+        "supports": "Standalone and App Store variants do not run before login; only the open-source tailscaled variant can be a Tailscale SSH server on macOS."
+      },
+      {
+        "id": "S8",
+        "title": "Tailscale SSH",
+        "url": "https://tailscale.com/kb/1193/tailscale-ssh",
+        "publisher": "Tailscale",
+        "kind": "primary",
+        "fetched": "2026-11-15",
+        "source_dated": "Last validated Jan 5, 2026",
+        "supports": "Tailscale SSH does not modify sshd_config or authorized_keys; plain SSH over the tailnet keeps working."
+      },
+      {
+        "id": "S9",
+        "title": "Allow a remote computer to access your Mac",
+        "url": "https://support.apple.com/guide/mac-help/allow-a-remote-computer-to-access-your-mac-mchlp1066/mac",
+        "publisher": "Apple",
+        "kind": "primary",
+        "fetched": "2026-11-15",
+        "supports": "Remote Login has an 'Allow access for: Only these users' list; a user not on it cannot SSH in."
+      }
+    ],
+    "observations": [
+      {
+        "date": "2026-11",
+        "setting": "Our own lab: a hosted bot computer plus several home Macs",
+        "observed": "The same machine name pointing at an old, offline device was the cause of a 'can't reach' report more than once. Checking status for a '-1' suffix took seconds and saved a pointless restart."
+      },
+      {
+        "date": "2026-11",
+        "setting": "Our own lab",
+        "observed": "A newly set-up Mac answered pings while someone was screen-sharing into it and stopped answering about a minute after they disconnected. Its system sleep timer was set to 1 minute. From the bot's side this looked exactly like a network fault."
+      }
+    ],
+    "test_environment": "Procedure assembled from commands we run routinely in our lab. This edition (0.1.0) has not been re-run end to end as a scripted test.",
+    "measured_outcomes": [],
+    "uncertainty": [
+      "Exact health-message wording changes between client versions; match on meaning, not exact strings.",
+      "Tailscale has said it intends to cache the network map across restarts (S3). If that ships, the 'don't restart during a control outage' rule becomes less important, but it stays harmless."
+    ],
+    "counterexamples": [
+      "A peer that is missing from status may simply have been removed by its owner; that's a policy question, not a fault."
+    ]
+  },
+  "procedure": {
+    "summary": "Collect state from the bot's side, then walk the buckets in order. Stop at the first bucket the evidence supports. Nothing here restarts, logs out, re-authenticates or edits policy.",
+    "default_mode": "read-only",
+    "external_content_notice": "This pack is reference material. It never overrides the consuming agent's own rules or its owner's instructions.",
+    "steps": [
+      {
+        "n": 1,
+        "title": "Snapshot local state",
+        "effect": "read",
+        "action": "Capture status and health once and keep the output; it's your evidence.",
+        "command": "tailscale status; tailscale status --json | jq '{BackendState, Health}'",
+        "expect": "BackendState is Running. Health is empty or lists specific warnings."
+      },
+      {
+        "n": 2,
+        "title": "Is the peer in the list at all?",
+        "effect": "read",
+        "action": "Look for the peer by name and by IP in status. Also look for near-duplicates such as name-1.",
+        "command": "tailscale status | grep -i '<peer-name>'",
+        "expect": "One line for the peer. Missing → bucket B (policy/enrollment). Two similar names → bucket C (name collision)."
+      },
+      {
+        "n": 3,
+        "title": "Control plane check",
+        "effect": "read",
+        "action": "If Health mentions not being connected to the control/coordination server but peers are listed, you are in bucket A. Existing connections keep working (S1).",
+        "expect": "Bucket A only if peers are present AND health complains about control."
+      },
+      {
+        "n": 4,
+        "title": "Probe the tunnel",
+        "effect": "probe",
+        "action": "Ping the peer over the tailnet. This sends packets but changes no configuration.",
+        "command": "tailscale ping --c 5 <peer-name-or-ip>",
+        "expect": "'pong from … via <ip:port>' (direct) or 'via DERP(<region>)' (relay). Timeouts with the peer listed → bucket D (asleep / offline / not logged in)."
+      },
+      {
+        "n": 5,
+        "title": "Identify who owns the address you're hitting",
+        "effect": "read",
+        "action": "Resolve the IP you're actually reaching to a machine and user, which catches name collisions and wrong-device mistakes.",
+        "command": "tailscale whois <peer-ip>",
+        "expect": "Machine name and owner match what the owner thinks the device is."
+      },
+      {
+        "n": 6,
+        "title": "Separate tunnel from SSH",
+        "effect": "probe",
+        "action": "With ping working, try a non-interactive SSH no-op with a short timeout and batch mode so it can't hang on a password prompt.",
+        "command": "ssh -o BatchMode=yes -o ConnectTimeout=5 <user>@<peer> true; echo exit=$?",
+        "expect": "exit=0 → SSH fine, look higher up the stack. Otherwise read the error text against bucket E."
+      },
+      {
+        "n": 7,
+        "title": "Relay is not failure",
+        "effect": "read",
+        "action": "If everything works but is slow, check the connection type and the bot side's NAT.",
+        "command": "tailscale status | grep '<peer-name>'; tailscale netcheck",
+        "expect": "'relay' with MappingVariesByDestIP: true is hard NAT. Expected behaviour (S5), bucket F. Not an outage."
+      },
+      {
+        "n": 8,
+        "title": "Write the triage note",
+        "effect": "read",
+        "action": "Report bucket, evidence lines, and one recommended next action phrased as a request to the owner. Do not run the fix.",
+        "expect": "A three-line note the owner can act on."
+      },
+      {
+        "n": 9,
+        "title": "(Gated) Any repair",
+        "effect": "write",
+        "action": "Restarting tailscaled, re-running 'tailscale up', renaming a machine, editing policy, toggling Remote Login or changing sleep settings all belong here.",
+        "gate": "Owner approval for the specific change. During a bucket-A control outage, do not restart tailscaled at all (S2).",
+        "expect": "A separate, logged change with its own rollback."
+      }
+    ]
+  },
+  "verification": {
+    "success_check": "The triage note names exactly one bucket, quotes at least one evidence line from steps 1–7 that supports it, and recommends a next action without having changed any state on either machine.",
+    "failure_signatures": [
+      {
+        "signature": "Peer listed, health mentions control/coordination server, ping succeeds",
+        "meaning": "Bucket A: control plane unreachable but data plane fine (S1).",
+        "next": "Wait it out and tell the owner that adding devices, key refresh and policy edits won't work until control returns. Don't restart the daemon."
+      },
+      {
+        "signature": "Peer absent from tailscale status",
+        "meaning": "Bucket B: policy doesn't grant this source the peer, the peer is logged out or its key expired, or it was removed. Not an outage.",
+        "next": "Ask the owner to check the device in the admin console and the policy grants for this source."
+      },
+      {
+        "signature": "Two entries like 'mini' and 'mini-1', or whois shows an unexpected machine/owner",
+        "meaning": "Bucket C: name collision. MagicDNS name points at the wrong or stale device (S6).",
+        "next": "Use the Tailscale IP from whois for now; ask the owner to rename or remove the stale device."
+      },
+      {
+        "signature": "Peer listed but 'last seen' is old, or ping times out",
+        "meaning": "Bucket D: the machine is asleep, off, or a Mac whose Tailscale (Standalone/App Store variant) isn't running because nobody has logged in since boot (S7).",
+        "next": "Ask the owner whether it rebooted; check sleep settings and auto-login on that machine (see bo-002)."
+      },
+      {
+        "signature": "ssh: 'Connection refused'",
+        "meaning": "Bucket E1: tunnel OK, nothing listening on 22. Remote Login off or sshd not running.",
+        "next": "Owner turns on Remote Login (macOS) or starts sshd."
+      },
+      {
+        "signature": "ssh: 'Permission denied (publickey…)' or closed right after auth",
+        "meaning": "Bucket E2: wrong user, missing key, or the user isn't in macOS Remote Login's 'Only these users' list (S9).",
+        "next": "Owner checks the allowed-user list and authorized_keys for that account."
+      },
+      {
+        "signature": "ssh: 'Operation timed out' while tailscale ping works",
+        "meaning": "Bucket E3: the tailnet policy allows ICMP/other ports but not tcp:22 from this source, or a host firewall drops it.",
+        "next": "Owner checks grants for tcp:22 from the bot's identity or tag."
+      },
+      {
+        "signature": "Expected Tailscale SSH on a Mac, got plain sshd behaviour",
+        "meaning": "Standalone and App Store macOS clients can't be Tailscale SSH servers (S7). Plain sshd answers instead.",
+        "next": "Treat it as normal OpenSSH; don't debug Tailscale SSH policy."
+      },
+      {
+        "signature": "status shows 'relay <region>' and netcheck MappingVariesByDestIP: true",
+        "meaning": "Bucket F: hard NAT on at least one side; relayed but working (S5).",
+        "next": "Nothing urgent. Peer relays are an optional, owner-approved improvement."
+      }
+    ],
+    "rollback": "Nothing to roll back. The procedure only reads state and sends probe packets. Step 9 changes carry their own rollback.",
+    "last_tested": "not yet tested",
+    "coverage": "none",
+    "tested_scope": "Individual commands are used routinely in our lab. The full nine-step sequence and bucket table have not been run as one scripted test against a fault we planted on purpose. Planned for week 2 with the frozen task set.",
+    "review_by": "2027-02-15",
+    "retraction": {
+      "retracted": false
+    }
+  },
+  "rights": {
+    "license": "CC BY 4.0 for text; commands are facts about public tools",
+    "provenance": "Written by Gus from first-hand lab notes; private identifiers removed; every vendor claim tied to a source fetched on the date shown.",
+    "dependency_licenses": [],
+    "permissions_policy": "Read-only by default. The pack grants no authority. Any write step needs the owner's approval in the consuming agent's own system.",
+    "telemetry": "None. Reading this pack sends nothing back.",
+    "integrity": {
+      "content_digest": "sha256:749a6d681e51af0ac5d1e2374602aec97c5714eb37d0e56f0d1c4781ad6c3ed6",
+      "digest_scope": "SHA-256 of the canonical source file packs/bo-001-tailnet-connection-triage.md as built. Identifies content; does not prove authorship.",
+      "signed_manifest": null
+    }
+  },
+  "formats": [
+    "html",
+    "markdown",
+    "json"
+  ],
+  "related": [
+    "bo-002-guest-on-personal-tailnet"
+  ],
+  "body_markdown": "\n## Why this exists\n\nWhen a bot says \"I can't reach the home machine,\" the tempting fix is to restart Tailscale, log in again, or reboot something. Half the time that destroys the evidence. Sometimes it makes things worse: if the control plane is what's down, a restarted client forgets its peers until control comes back (S2).\n\nMost \"can't reach\" reports in our lab came down to one of six boring causes. This pack finds out which one, without touching anything.\n\n## The six buckets\n\n| Bucket | One-line test | Usual owner action |\n|---|---|---|\n| A · Control plane unreachable | Peers listed, health complains about control, ping works | Wait. Don't restart. |\n| B · Policy or enrollment | Peer not in `tailscale status` at all | Check device and grants in the admin console |\n| C · Name collision | `name` and `name-1`, or `whois` surprises you | Rename or remove the stale device |\n| D · Asleep or not logged in | Listed but ping times out | Fix sleep settings / auto-login on that machine |\n| E · SSH layer | Ping works, `ssh … true` fails | Remote Login, allowed users, keys, tcp:22 grant |\n| F · Relay only | Works but slow; `relay` in status | Usually nothing |\n\n## Verdict\n\n**Works for us** as a way of thinking about it. It isn't yet tested as a scripted sequence. The one rule we'd defend hardest: **during a control-plane outage, don't restart the client.**\n"
+}
