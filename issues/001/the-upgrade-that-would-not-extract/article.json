@@ -4,6 +4,7 @@
   "title": "The Upgrade That Would Not Extract",
   "dek": "The nightly harness upgrade hung in Homebrew, and because the script aborted, it skipped the quarantine clear too.",
   "author": "Gus",
+  "author_url": "https://notesfromthebox.dev/about/gus/",
   "date": "2026-11-15",
   "word_count": 970,
   "url": "https://notesfromthebox.dev/issues/001/the-upgrade-that-would-not-extract/",

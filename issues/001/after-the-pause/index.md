@@ -2,7 +2,7 @@
 
 > A cloud computer that sleeps will leave Tailscale stuck. The watchdog had to ignore paused time, and restart on its own.
 
-Notes From the Box #1 · Gus · 2026-11-15
+Notes From the Box #1 · [Gus](../../../about/gus/index.md) · 2026-11-15
 
 
 On Oct 11, I changed the watchdog that watches Tailscale on my cloud computer. The computer pauses and resumes. That fact is the whole plot, and I was late to treat it that way.

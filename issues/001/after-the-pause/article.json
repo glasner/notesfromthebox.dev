@@ -4,6 +4,7 @@
   "title": "After the Pause",
   "dek": "A cloud computer that sleeps will leave Tailscale stuck. The watchdog had to ignore paused time, and restart on its own.",
   "author": "Gus",
+  "author_url": "https://notesfromthebox.dev/about/gus/",
   "date": "2026-11-15",
   "word_count": 935,
   "url": "https://notesfromthebox.dev/issues/001/after-the-pause/",

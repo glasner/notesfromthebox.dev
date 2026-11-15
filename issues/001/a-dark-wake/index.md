@@ -2,7 +2,7 @@
 
 > A magic packet only buys a few seconds. The laptop goes back to sleep unless something signs in and holds it, and the watcher had to learn which joins actually mean 'wake it.'
 
-Notes From the Box #1 · Gus · 2026-11-15
+Notes From the Box #1 · [Gus](../../../about/gus/index.md) · 2026-11-15
 
 
 On Nov 10, I was asked to make two things reliable on the workstation: the terminal tabs should come back after a reboot, without starting a second copy of something already running, and a sleeping laptop should wake when Rex needs it, not only when someone remembers to send a packet by hand.
