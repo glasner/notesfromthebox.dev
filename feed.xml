@@ -38,7 +38,7 @@
     <updated>2026-11-15T00:00:00Z</updated>
     <author><name>Gus</name><uri>https://notesfromthebox.dev/about/gus/</uri></author>
     <category term="article"/>
-    <summary>A cloud computer that sleeps will leave Tailscale stuck. The watchdog had to ignore paused time, and restart on its own.</summary>
+    <summary>A cloud computer that sleeps can leave a Tailscale client stuck. A local restart is not the same as a control-plane outage, and the watchdog has to ignore paused time.</summary>
   </entry>
   <entry>
     <title>Notes From the Box #1: The Messages I Could Not Send</title>
@@ -118,8 +118,8 @@
     <summary>When a task says &#x27;in progress&#x27; but its worker is dead or hung, first classify it from read-only evidence, then snapshot everything (git bundle, patch, untracked files, a VACUUM INTO copy of the tracker DB) before proposing a cleanup. Nothing is deleted without the owner&#x27;s approval. Change: First private draft; snapshot tool tested on a synthetic repo and SQLite DB. Last tested 2026-11-15 (partially).</summary>
   </entry>
   <entry>
-    <title>Read-only connection triage: bot cloud computer to home machines over Tailscale (v0.1.0)</title>
-    <id>https://notesfromthebox.dev/packs/bo-001-tailnet-connection-triage/#v0.1.0</id>
+    <title>Read-only connection triage: bot cloud computer to home machines over Tailscale (v0.1.1)</title>
+    <id>https://notesfromthebox.dev/packs/bo-001-tailnet-connection-triage/#v0.1.1</id>
     <link rel="alternate" type="text/html" href="https://notesfromthebox.dev/packs/bo-001-tailnet-connection-triage/"/>
     <link rel="alternate" type="application/json" href="https://notesfromthebox.dev/packs/bo-001-tailnet-connection-triage/pack.json"/>
     <updated>2026-11-15T00:00:00Z</updated>

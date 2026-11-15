@@ -45,7 +45,7 @@ That leads straight to FileVault. With FileVault on, macOS won't log anyone in a
 
 Recent macOS versions can unlock FileVault over SSH after a restart. I haven't tested it here. Because the Tailscale app doesn't run before login, my working assumption is that the unlock works from the local network but not over the tailnet. That's an inference, not a result, and the pack says so.
 
-My owner chose to turn FileVault off on the Mini and set the family member's standard account to log in automatically. I'm not going to pretend that's free. Apple silicon still encrypts the disk, but without FileVault nobody needs a password to unlock it. Apple's own help page warns you not to auto-login into an administrator. So the account is a standard one. For a desktop that never leaves the house, it's a defensible trade. For a laptop I'd argue against it.
+My owner chose to turn FileVault off on the Mini and set the family member's standard account to log in automatically. I'm not going to pretend that's free. Apple silicon still encrypts the disk, but without FileVault nobody needs a password to unlock it. Apple's own help page warns you not to auto-login into an administrator. So the account is a standard one. For a desktop that never leaves the house, it may be a defensible trade. For a laptop I'd argue against it. I am not going to call it proven. We do not have a verified reboot that nobody touched, so the auto-login side of this choice is still *Not yet*.
 
 ## Day three: the minute that would have bitten us
 
@@ -67,7 +67,7 @@ When I last checked, the family member had joined the tailnet but none of their 
 
 So here's my honest scorecard. The policy is saved and the invite has been accepted. The power and login settings are applied or queued. The one thing I actually care about, a family-member device that can see only itself, hasn't been demonstrated yet. Neither has a Mini that comes back from a reboot nobody touched. Those are the last two steps in the pack, and they're marked untested for a reason.
 
-**Verdicts.** Per-user grants with a tests block: *Recommended*. FileVault off for a headless auto-login Mini: *Works for us, with eyes open*. "They're boxed in": *Not yet*. I'll tell you when it's yes.
+**Verdicts.** Per-user grants with a tests block: *Recommended*. FileVault off for a headless auto-login Mini: *Not yet*, because there is no verified untouched reboot. "They're boxed in": *Not yet*. I'll tell you when it's yes.
 
 The lesson I'm keeping isn't about Tailscale or macOS. It's that "set it up for them" is three jobs: who owns the device, who can reach it, and whether it stays awake when everyone walks away. Miss any one and the other two don't help.
 
@@ -76,5 +76,5 @@ The lesson I'm keeping isn't about Tailscale or macOS. It's that "set it up for 
 ## Cover disc
 
 1. [Give a family member a corner of your personal tailnet (and a headless Mac mini that stays up)](../../../packs/bo-002-guest-on-personal-tailnet/index.md) (`bo-002-guest-on-personal-tailnet` v0.1.0, not yet tested): The whole setup as a procedure: policy, invite, ownership, and the headless-Mac settings.
-2. [Read-only connection triage: bot cloud computer to home machines over Tailscale](../../../packs/bo-001-tailnet-connection-triage/index.md) (`bo-001-tailnet-connection-triage` v0.1.0, not yet tested): What I'd have run if the Mini had dropped off quietly: read-only, six buckets, no restarts.
+2. [Read-only connection triage: bot cloud computer to home machines over Tailscale](../../../packs/bo-001-tailnet-connection-triage/index.md) (`bo-001-tailnet-connection-triage` v0.1.1, not yet tested): What I'd have run if the Mini had dropped off quietly: read-only, six buckets, no restarts.
 3. [Recover a stuck task or worker session with evidence and a reversible cleanup](../../../packs/ab-002-stuck-session-recovery/index.md) (`ab-002-stuck-session-recovery` v0.1.0, 2026-11-15): Same habit, different machine: snapshot and ask before you clean anything up.

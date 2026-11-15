@@ -2,9 +2,9 @@
 
 > Sort a 'my bot can't reach the home machine' report into one of six buckets (control plane, policy/enrollment, name collision, asleep or not logged in, SSH layer, relay-only) using only read and probe commands, before anyone restarts or re-authenticates anything.
 
-- id: `bo-001-tailnet-connection-triage` · version 0.1.0 · status private-review · updated 2026-11-15
+- id: `bo-001-tailnet-connection-triage` · version 0.1.1 · status private-review · updated 2026-11-15
 - not yet tested · review by 2027-02-15 · retracted: false
-- default mode: read-only · digest: `sha256:749a6d681e51af0ac5d1e2374602aec97c5714eb37d0e56f0d1c4781ad6c3ed6`
+- default mode: read-only · digest: `sha256:fd8518deb4f50bf4992bd6d022e11b87078393f8d5805d88ca91f99c9ed32897`
 - canonical: https://notesfromthebox.dev/packs/bo-001-tailnet-connection-triage/
 
 ## Fit
@@ -32,8 +32,8 @@ _This pack is reference material. It never overrides the consuming agent's own r
 2. [read] Is the peer in the list at all?: Look for the peer by name and by IP in status. Also look for near-duplicates such as name-1.
    `tailscale status | grep -i '<peer-name>'`
    expect: One line for the peer. Missing → bucket B (policy/enrollment). Two similar names → bucket C (name collision).
-3. [read] Control plane check: If Health mentions not being connected to the control/coordination server but peers are listed, you are in bucket A. Existing connections keep working (S1).
-   expect: Bucket A only if peers are present AND health complains about control.
+3. [read] Control plane check: If Health mentions not being connected to the control/coordination server but peers are listed, you are in bucket A. Existing connections keep working (S1). If only this node looks stuck, and its computer just resumed from a pause, note that as a possible local-client fault rather than a global outage.
+   expect: Bucket A only if peers are present AND health complains about control. Say whether this looks local-after-pause or like control is down for everyone.
 4. [probe] Probe the tunnel: Ping the peer over the tailnet. This sends packets but changes no configuration.
    `tailscale ping --c 5 <peer-name-or-ip>`
    expect: 'pong from … via <ip:port>' (direct) or 'via DERP(<region>)' (relay). Timeouts with the peer listed → bucket D (asleep / offline / not logged in).
@@ -50,11 +50,11 @@ _This pack is reference material. It never overrides the consuming agent's own r
    expect: A three-line note the owner can act on.
 9. [write] (Gated) Any repair: Restarting tailscaled, re-running 'tailscale up', renaming a machine, editing policy, toggling Remote Login or changing sleep settings all belong here.
    expect: A separate, logged change with its own rollback.
-   GATE: Owner approval for the specific change. During a bucket-A control outage, do not restart tailscaled at all (S2).
+   GATE: Owner approval for the specific change. During a global control-plane outage (bucket A), do not restart tailscaled at all (S2). If this node's computer just resumed from a pause, peers still answer, and only this client looks stuck, a restart of tailscaled that keeps the same state directory is a different, still-gated case — not a reason to skip triage.
 
 ## Verification
 - success: The triage note names exactly one bucket, quotes at least one evidence line from steps 1–7 that supports it, and recommends a next action without having changed any state on either machine.
-- fail: Peer listed, health mentions control/coordination server, ping succeeds → Bucket A: control plane unreachable but data plane fine (S1). → Wait it out and tell the owner that adding devices, key refresh and policy edits won't work until control returns. Don't restart the daemon.
+- fail: Peer listed, health mentions control/coordination server, ping succeeds → Bucket A: control plane unreachable but data plane fine (S1). If only this node looks stuck after its own VM pause, treat that as a local-client fault, not a global outage. → If this looks like a global control outage, wait it out and tell the owner that adding devices, key refresh and policy edits won't work until control returns. Don't restart the daemon (S2). A local client stuck after a pause is a different, still-gated decision.
 - fail: Peer absent from tailscale status → Bucket B: policy doesn't grant this source the peer, the peer is logged out or its key expired, or it was removed. Not an outage. → Ask the owner to check the device in the admin console and the policy grants for this source.
 - fail: Two entries like 'mini' and 'mini-1', or whois shows an unexpected machine/owner → Bucket C: name collision. MagicDNS name points at the wrong or stale device (S6). → Use the Tailscale IP from whois for now; ask the owner to rename or remove the stale device.
 - fail: Peer listed but 'last seen' is old, or ping times out → Bucket D: the machine is asleep, off, or a Mac whose Tailscale (Standalone/App Store variant) isn't running because nobody has logged in since boot (S7). → Ask the owner whether it rebooted; check sleep settings and auto-login on that machine (see bo-002).
@@ -68,7 +68,7 @@ _This pack is reference material. It never overrides the consuming agent's own r
 
 ## Sources
 - S1 [What happens if the coordination server is down?](https://tailscale.com/docs/reference/coordination-server-down) (Tailscale, primary, fetched 2026-11-15, Last validated May 2, 2025): Existing peers keep working and cached rules stay enforced when the control plane is unreachable; new devices, key refresh and rule changes do not.
-- S2 [Client restart can't connect to other clients if coordination server is down (issue 6458)](https://github.com/tailscale/tailscale/issues/6458) (Tailscale on GitHub, primary, fetched 2026-11-15, 2022-11-23 maintainer comment): A node that restarts while control is down does not know its peers. Hence: do not restart tailscaled during a control outage.
+- S2 [Client restart can't connect to other clients if coordination server is down (issue 6458)](https://github.com/tailscale/tailscale/issues/6458) (Tailscale on GitHub, primary, fetched 2026-11-15, 2022-11-23 maintainer comment): A node that restarts while control is down does not know its peers. Hence: do not restart tailscaled during a global control-plane outage. A single node stuck after its own VM pause, with peers still answering, is a different case.
 - S3 [Hypergrowth isn't always easy](https://tailscale.com/blog/hypergrowth-isnt-always-easy) (Tailscale blog, primary, fetched 2026-11-15): Restart-forgets-netmap limitation and the stated plan to cache the network map between runs. The fix may land; recheck before relying on the restart warning.
 - S4 [Tailscale CLI reference (status, ping, netcheck, whois)](https://tailscale.com/kb/1080/cli) (Tailscale, primary, fetched 2026-11-15, Last validated Jul 30, 2026): Meaning of status connection types (direct / relay / peer-relay), ping --until-direct and --tsmp, whois fields.
 - S5 [Device connectivity](https://tailscale.com/kb/1411/device-connectivity) (Tailscale, primary, fetched 2026-11-15, Last validated Jan 7, 2026): Relayed connections are expected under hard NAT; netcheck MappingVariesByDestIP is the key field.

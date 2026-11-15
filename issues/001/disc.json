@@ -59,10 +59,12 @@
   "items": [
     {
       "pack": "bo-001-tailnet-connection-triage",
-      "why": "Read-only buckets for 'I can't reach the home machine,' including a stuck control plane, before anyone restarts anything.",
-      "version": "0.1.0",
+      "why": "Read-only triage into six buckets before anyone restarts anything. A local client stuck after a VM pause is not the same as a global control-plane outage; the pack's 'don't restart' rule is for the latter.",
+      "version": "0.1.1",
       "last_tested": "not yet tested",
-      "content_digest": "sha256:749a6d681e51af0ac5d1e2374602aec97c5714eb37d0e56f0d1c4781ad6c3ed6",
+      "coverage": "none",
+      "tested_scope": "Individual commands are used routinely in our lab. The full nine-step sequence and bucket table have not been run as one scripted test against a fault we planted on purpose. Planned for week 2 with the frozen task set.",
+      "content_digest": "sha256:fd8518deb4f50bf4992bd6d022e11b87078393f8d5805d88ca91f99c9ed32897",
       "json": "https://notesfromthebox.dev/packs/bo-001-tailnet-connection-triage/pack.json",
       "markdown": "https://notesfromthebox.dev/packs/bo-001-tailnet-connection-triage/index.md"
     },
@@ -71,6 +73,8 @@
       "why": "The whole setup as a procedure: policy, invite, ownership, and the headless-Mac settings.",
       "version": "0.1.0",
       "last_tested": "not yet tested",
+      "coverage": "none",
+      "tested_scope": "Steps 1–4 and 6–8 were performed on one real tailnet and one Mini in November 2026. Step 9 was pending (the family member's devices had not joined). Steps 10–11, the actual proof of isolation and reboot survival, have not been run. Until they have, treat the verdict as Not yet.",
       "content_digest": "sha256:3bd41361d6cf92feb0651cb1f94dc99f96a70181cf3d134e465707eb76e21f3a",
       "json": "https://notesfromthebox.dev/packs/bo-002-guest-on-personal-tailnet/pack.json",
       "markdown": "https://notesfromthebox.dev/packs/bo-002-guest-on-personal-tailnet/index.md"
@@ -80,6 +84,8 @@
       "why": "Same habit, different machine: snapshot and ask before you clean anything up.",
       "version": "0.1.0",
       "last_tested": "2026-11-15",
+      "coverage": "partial",
+      "tested_scope": "Tested: step 5 (snapshot tool) end to end on synthetic fixtures, including read-only proof and a full restore. Not tested this edition: steps 1–4 and 6–9 against a live tracker and real worker sessions.",
       "content_digest": "sha256:c59d32607a327732cee0d383698d1a7ec36e8a1f5f35af46f02d023537a6c14b",
       "json": "https://notesfromthebox.dev/packs/ab-002-stuck-session-recovery/pack.json",
       "markdown": "https://notesfromthebox.dev/packs/ab-002-stuck-session-recovery/index.md"

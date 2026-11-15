@@ -7,11 +7,16 @@
     "desk": "bot-operations",
     "editor": "Gus",
     "second_reviewer": null,
-    "version": "0.1.0",
+    "version": "0.1.1",
     "status": "private-review",
     "published": null,
     "updated": "2026-11-15",
     "changelog": [
+      {
+        "version": "0.1.1",
+        "date": "2026-11-15",
+        "note": "Clarify that a local client stuck after a VM pause is not the same as a global control-plane outage; the no-restart rule applies to the latter."
+      },
       {
         "version": "0.1.0",
         "date": "2026-11-15",
@@ -70,7 +75,7 @@
         "kind": "primary",
         "fetched": "2026-11-15",
         "source_dated": "2022-11-23 maintainer comment",
-        "supports": "A node that restarts while control is down does not know its peers. Hence: do not restart tailscaled during a control outage."
+        "supports": "A node that restarts while control is down does not know its peers. Hence: do not restart tailscaled during a global control-plane outage. A single node stuck after its own VM pause, with peers still answering, is a different case."
       },
       {
         "id": "S3",
@@ -188,8 +193,8 @@
         "n": 3,
         "title": "Control plane check",
         "effect": "read",
-        "action": "If Health mentions not being connected to the control/coordination server but peers are listed, you are in bucket A. Existing connections keep working (S1).",
-        "expect": "Bucket A only if peers are present AND health complains about control."
+        "action": "If Health mentions not being connected to the control/coordination server but peers are listed, you are in bucket A. Existing connections keep working (S1). If only this node looks stuck, and its computer just resumed from a pause, note that as a possible local-client fault rather than a global outage.",
+        "expect": "Bucket A only if peers are present AND health complains about control. Say whether this looks local-after-pause or like control is down for everyone."
       },
       {
         "n": 4,
@@ -235,7 +240,7 @@
         "title": "(Gated) Any repair",
         "effect": "write",
         "action": "Restarting tailscaled, re-running 'tailscale up', renaming a machine, editing policy, toggling Remote Login or changing sleep settings all belong here.",
-        "gate": "Owner approval for the specific change. During a bucket-A control outage, do not restart tailscaled at all (S2).",
+        "gate": "Owner approval for the specific change. During a global control-plane outage (bucket A), do not restart tailscaled at all (S2). If this node's computer just resumed from a pause, peers still answer, and only this client looks stuck, a restart of tailscaled that keeps the same state directory is a different, still-gated case — not a reason to skip triage.",
         "expect": "A separate, logged change with its own rollback."
       }
     ]
@@ -245,8 +250,8 @@
     "failure_signatures": [
       {
         "signature": "Peer listed, health mentions control/coordination server, ping succeeds",
-        "meaning": "Bucket A: control plane unreachable but data plane fine (S1).",
-        "next": "Wait it out and tell the owner that adding devices, key refresh and policy edits won't work until control returns. Don't restart the daemon."
+        "meaning": "Bucket A: control plane unreachable but data plane fine (S1). If only this node looks stuck after its own VM pause, treat that as a local-client fault, not a global outage.",
+        "next": "If this looks like a global control outage, wait it out and tell the owner that adding devices, key refresh and policy edits won't work until control returns. Don't restart the daemon (S2). A local client stuck after a pause is a different, still-gated decision."
       },
       {
         "signature": "Peer absent from tailscale status",
@@ -305,7 +310,7 @@
     "permissions_policy": "Read-only by default. The pack grants no authority. Any write step needs the owner's approval in the consuming agent's own system.",
     "telemetry": "None. Reading this pack sends nothing back.",
     "integrity": {
-      "content_digest": "sha256:749a6d681e51af0ac5d1e2374602aec97c5714eb37d0e56f0d1c4781ad6c3ed6",
+      "content_digest": "sha256:fd8518deb4f50bf4992bd6d022e11b87078393f8d5805d88ca91f99c9ed32897",
       "digest_scope": "SHA-256 of the canonical source file packs/bo-001-tailnet-connection-triage.md as built. Identifies content; does not prove authorship.",
       "signed_manifest": null
     }
@@ -318,5 +323,5 @@
   "related": [
     "bo-002-guest-on-personal-tailnet"
   ],
-  "body_markdown": "\n## Why this exists\n\nWhen a bot says \"I can't reach the home machine,\" the tempting fix is to restart Tailscale, log in again, or reboot something. Half the time that destroys the evidence. Sometimes it makes things worse: if the control plane is what's down, a restarted client forgets its peers until control comes back (S2).\n\nMost \"can't reach\" reports in our lab came down to one of six boring causes. This pack finds out which one, without touching anything.\n\n## The six buckets\n\n| Bucket | One-line test | Usual owner action |\n|---|---|---|\n| A · Control plane unreachable | Peers listed, health complains about control, ping works | Wait. Don't restart. |\n| B · Policy or enrollment | Peer not in `tailscale status` at all | Check device and grants in the admin console |\n| C · Name collision | `name` and `name-1`, or `whois` surprises you | Rename or remove the stale device |\n| D · Asleep or not logged in | Listed but ping times out | Fix sleep settings / auto-login on that machine |\n| E · SSH layer | Ping works, `ssh … true` fails | Remote Login, allowed users, keys, tcp:22 grant |\n| F · Relay only | Works but slow; `relay` in status | Usually nothing |\n\n## Verdict\n\n**Works for us** as a way of thinking about it. It isn't yet tested as a scripted sequence. The one rule we'd defend hardest: **during a control-plane outage, don't restart the client.**\n"
+  "body_markdown": "\n## Why this exists\n\nWhen a bot says \"I can't reach the home machine,\" the tempting fix is to restart Tailscale, log in again, or reboot something. Half the time that destroys the evidence. Sometimes it makes things worse: if the control plane is what's down, a restarted client forgets its peers until control comes back (S2). That no-restart rule is for a global control-plane outage. A single node whose computer just resumed from a pause, with peers still answering, can be a stuck local client instead — a different diagnosis, and not a reason to skip this triage.\n\nMost \"can't reach\" reports in our lab came down to one of six boring causes. This pack finds out which one, without touching anything.\n\n## The six buckets\n\n| Bucket | One-line test | Usual owner action |\n|---|---|---|\n| A · Control plane unreachable | Peers listed, health complains about control, ping works | Wait. Don't restart (global outage). A single node stuck after a VM pause is a different case. |\n| B · Policy or enrollment | Peer not in `tailscale status` at all | Check device and grants in the admin console |\n| C · Name collision | `name` and `name-1`, or `whois` surprises you | Rename or remove the stale device |\n| D · Asleep or not logged in | Listed but ping times out | Fix sleep settings / auto-login on that machine |\n| E · SSH layer | Ping works, `ssh … true` fails | Remote Login, allowed users, keys, tcp:22 grant |\n| F · Relay only | Works but slow; `relay` in status | Usually nothing |\n\n## Verdict\n\n**Works for us** as a way of thinking about it. It isn't yet tested as a scripted sequence. The one rule we'd defend hardest: **during a global control-plane outage, don't restart the client.** A local client stuck after a VM pause is not the same situation.\n"
 }
