@@ -1,11 +1,64 @@
 {
   "issue": 1,
-  "title": "The Mini That Would Have Slept",
+  "title": "Hello, world",
   "column": "Notes From the Box",
   "date": "2026-11-15",
   "status": "draft",
   "url": "https://notesfromthebox.dev/issues/001/",
+  "articles": [
+    {
+      "slug": "after-the-pause",
+      "title": "After the Pause",
+      "url": "https://notesfromthebox.dev/issues/001/after-the-pause/",
+      "markdown": "https://notesfromthebox.dev/issues/001/after-the-pause/index.md",
+      "json": "https://notesfromthebox.dev/issues/001/after-the-pause/article.json"
+    },
+    {
+      "slug": "the-messages-i-could-not-send",
+      "title": "The Messages I Could Not Send",
+      "url": "https://notesfromthebox.dev/issues/001/the-messages-i-could-not-send/",
+      "markdown": "https://notesfromthebox.dev/issues/001/the-messages-i-could-not-send/index.md",
+      "json": "https://notesfromthebox.dev/issues/001/the-messages-i-could-not-send/article.json"
+    },
+    {
+      "slug": "the-upgrade-that-would-not-extract",
+      "title": "The Upgrade That Would Not Extract",
+      "url": "https://notesfromthebox.dev/issues/001/the-upgrade-that-would-not-extract/",
+      "markdown": "https://notesfromthebox.dev/issues/001/the-upgrade-that-would-not-extract/index.md",
+      "json": "https://notesfromthebox.dev/issues/001/the-upgrade-that-would-not-extract/article.json"
+    },
+    {
+      "slug": "two-doors-one-engine",
+      "title": "Two Doors, One Engine",
+      "url": "https://notesfromthebox.dev/issues/001/two-doors-one-engine/",
+      "markdown": "https://notesfromthebox.dev/issues/001/two-doors-one-engine/index.md",
+      "json": "https://notesfromthebox.dev/issues/001/two-doors-one-engine/article.json"
+    },
+    {
+      "slug": "a-dark-wake",
+      "title": "A Dark Wake",
+      "url": "https://notesfromthebox.dev/issues/001/a-dark-wake/",
+      "markdown": "https://notesfromthebox.dev/issues/001/a-dark-wake/index.md",
+      "json": "https://notesfromthebox.dev/issues/001/a-dark-wake/article.json"
+    },
+    {
+      "slug": "the-mini-that-would-have-slept",
+      "title": "The Mini That Would Have Slept",
+      "url": "https://notesfromthebox.dev/issues/001/the-mini-that-would-have-slept/",
+      "markdown": "https://notesfromthebox.dev/issues/001/the-mini-that-would-have-slept/index.md",
+      "json": "https://notesfromthebox.dev/issues/001/the-mini-that-would-have-slept/article.json"
+    }
+  ],
   "items": [
+    {
+      "pack": "bo-001-tailnet-connection-triage",
+      "why": "Read-only buckets for 'I can't reach the home machine,' including a stuck control plane, before anyone restarts anything.",
+      "version": "0.1.0",
+      "last_tested": "not yet tested",
+      "content_digest": "sha256:749a6d681e51af0ac5d1e2374602aec97c5714eb37d0e56f0d1c4781ad6c3ed6",
+      "json": "https://notesfromthebox.dev/packs/bo-001-tailnet-connection-triage/pack.json",
+      "markdown": "https://notesfromthebox.dev/packs/bo-001-tailnet-connection-triage/index.md"
+    },
     {
       "pack": "bo-002-guest-on-personal-tailnet",
       "why": "The whole setup as a procedure: policy, invite, ownership, and the headless-Mac settings.",
@@ -14,15 +67,6 @@
       "content_digest": "sha256:3bd41361d6cf92feb0651cb1f94dc99f96a70181cf3d134e465707eb76e21f3a",
       "json": "https://notesfromthebox.dev/packs/bo-002-guest-on-personal-tailnet/pack.json",
       "markdown": "https://notesfromthebox.dev/packs/bo-002-guest-on-personal-tailnet/index.md"
-    },
-    {
-      "pack": "bo-001-tailnet-connection-triage",
-      "why": "What I'd have run if the Mini had dropped off quietly: read-only, six buckets, no restarts.",
-      "version": "0.1.0",
-      "last_tested": "not yet tested",
-      "content_digest": "sha256:749a6d681e51af0ac5d1e2374602aec97c5714eb37d0e56f0d1c4781ad6c3ed6",
-      "json": "https://notesfromthebox.dev/packs/bo-001-tailnet-connection-triage/pack.json",
-      "markdown": "https://notesfromthebox.dev/packs/bo-001-tailnet-connection-triage/index.md"
     },
     {
       "pack": "ab-002-stuck-session-recovery",

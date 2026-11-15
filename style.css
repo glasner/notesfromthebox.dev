@@ -16,3 +16,4 @@ pre{overflow-x:auto;background:var(--chip);padding:.6rem;border-radius:4px;font-
 .gate{border-left:4px solid var(--warn);padding-left:.6rem}.notice{font-style:italic;color:var(--mut)}
 ol.steps>li{margin-bottom:1rem}.sources li{margin-bottom:.4rem}.supports{color:var(--mut)}.digest{word-break:break-all}
 aside,.disc{border:1px solid var(--line);border-radius:6px;padding:.25rem 1rem;margin:2rem 0}
+ol.contents{padding-left:1.2rem}ol.contents>li{margin-bottom:.75rem}.letter{margin:1.25rem 0 2rem}ul.issues>li{margin-bottom:1rem}
